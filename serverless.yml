@@ -1,0 +1,54 @@
+service: url-shortener
+
+useDotenv: true
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: python3.8
+  region: ${file(config.json):region}
+  stage: ${file(config.json):stage}
+  apiGateway:
+    shouldStartNameWithService: true
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+      Resource: "arn:aws:s3:::${file(config.json):bucket}/*"
+package:
+  include:
+    - src/api.py
+    - config.json
+  exclude:
+    - '**/*'
+
+functions:
+  shorten:
+    handler: src/api.handle
+    events:
+      - http:
+          path: /
+          method: post
+
+resources:
+  Resources:
+    ServerlessRedirectS3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${file(config.json):bucket}
+        AccessControl: PublicRead
+        WebsiteConfiguration:
+          IndexDocument: index.html
+    ServerlessRedirectS3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: ${file(config.json):bucket}
+        PolicyDocument:
+          Statement:
+            - Action:
+                - "s3:GetObject"
+              Effect: "Allow"
+              Resource:
+                - arn:aws:s3:::${file(config.json):bucket}/*
+              Principal: "*"

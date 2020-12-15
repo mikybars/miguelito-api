@@ -1,0 +1,6 @@
+[run]
+source = src
+omit = src/test_*
+
+[report]
+fail_under = 80
