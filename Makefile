@@ -1,6 +1,8 @@
 .PHONY: help venv test deploy undeploy clean
 .DEFAULT_GOAL := help
 
+BUCKET_NAME := $(shell jq -r .bucket <config.json)
+
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		sort | \
@@ -21,7 +23,9 @@ test: venv      ## Run unit tests (in virtual env)
 
 deploy:         ## Deploy the service to AWS and upload static content
 	sls deploy -v
-	jq -r .bucket <config.json | xargs -I{} aws s3 sync static s3://{}
+	@echo Uploading static web files...
+	aws s3 sync static s3://$(BUCKET_NAME)/static
+	aws s3 cp index.html s3://$(BUCKET_NAME)
 
 undeploy:       ## Delete all the resources from AWS
 	sls remove
