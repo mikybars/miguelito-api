@@ -1,3 +1,5 @@
+[![Deploy to AWS](https://github.com/mperezi/aws-lambda-url-shortener/workflows/Deploy%20to%20AWS/badge.svg)](https://github.com/mperezi/aws-lambda-url-shortener/actions?query=workflow%3A%22Deploy+to+AWS%22)
+
 # Serverless URL shortener
 
 ## Motivation
