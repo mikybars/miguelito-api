@@ -2,6 +2,8 @@
 .DEFAULT_GOAL := help
 
 BUCKET_NAME := $(shell jq -r .bucket <config.json)
+MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+MKFILE_DIR  := $(dir $(MKFILE_PATH))
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -19,7 +21,7 @@ venv/marker: requirements.txt test-requirements.txt
 
 test: venv      ## Run unit tests (in virtual env)
 	. venv/bin/activate
-	pytest --cov
+	PYTHONPATH=$(MKFILE_DIR) pytest --cov
 
 deploy:         ## Deploy the service to AWS and upload static content
 	sls deploy -v

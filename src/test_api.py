@@ -70,6 +70,17 @@ class TestApi:
         assert 'required' in body['message']
         assert 'path' not in body['message']
 
+    def test_domain_name_without_trailing_slash(self):
+        with link_does_not_exist_in_s3():
+            event = {
+                'body': '{"url":"https://www.google.com"}'
+            }
+
+            status, body = handle(event)
+
+            assert status == 200
+            assert body['message'] == 'success'
+
     def test_valid_custom_path(self):
         with link_does_not_exist_in_s3():
             event = {

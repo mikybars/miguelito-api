@@ -19,6 +19,7 @@ provider:
 package:
   include:
     - src/api.py
+    - src/validators.py
     - config.json
   exclude:
     - '**/*'

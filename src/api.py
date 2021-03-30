@@ -2,10 +2,10 @@ import boto3
 import json
 import logging
 import string
+from src.validators import url as validate_url
 from collections import defaultdict
 from random import choice
 from itertools import chain
-from urllib.parse import urlparse
 from botocore.exceptions import ClientError
 
 config = dict()
@@ -66,11 +66,6 @@ def build_response(status_code, msg, path=None):
     }
 
 
-def invalid_url(url):
-    url_parsed = urlparse(url)
-    return not all([url_parsed.scheme, url_parsed.netloc, url_parsed.path])
-
-
 def get_body(event):
     return defaultdict(str, json.loads(event['body']))
 
@@ -89,7 +84,7 @@ def handle(event, context):
         logger.error('URL is empty or missing')
         return build_response(400, "URL is required")
 
-    if invalid_url(origin_url):
+    if not validate_url(origin_url):
         logger.error('URL is invalid')
         return build_response(400, "URL is invalid")
 
