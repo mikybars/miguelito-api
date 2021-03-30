@@ -112,9 +112,10 @@
 				$('input#custom-path').val('').focus()
 			}
 
-			function hideCustomize() {
+			function resetCustomize() {
 				$('#customize-button').show()
 				$('div#custom-path').hide()
+				$('input#custom-path').val('')
 			}
 
 			function shortenLink(apiUrl, longUrl, customPath) {
@@ -126,7 +127,7 @@
 					var host = window.location.host + '/'
 					var shortUrl = protocol + host + responseJSON.path
 					displayShortenedUrl(shortUrl)
-					hideCustomize()
+					resetCustomize()
 				}).fail(function (data) {
 					if (data.status === 400) {
 						errorMessage(data.responseJSON.message)
@@ -163,7 +164,7 @@
 			})
 			$(document).keydown(function(event) {
 				if (event.key == "Escape" && $('input#custom-path').is(':focus')) {
-					hideCustomize()
+					resetCustomize()
 				}
 			})
 			</script>
