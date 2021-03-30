@@ -103,8 +103,8 @@
 
 			function displayShortenedUrl(longUrl, shortUrl) {
 				$('#message').html(`
-				   <a id="short-url" title="${longUrl}" href="${shortUrl}">${shortUrl}</a>
-				   <a href="" onclick="copyLinkToClipboard(); return false;" title="Copy to clipboard">
+				   <a id="short-url" popover-left="${longUrl}" href="${shortUrl}">${shortUrl}</a>
+				   <a href="" onclick="copyLinkToClipboard(); return false;" popover-right="Copy to clipboard">
 				   <i class="far fa-clipboard"></i>
 					</a>
 			   `).attr('class', 'alert alert-success').show()
