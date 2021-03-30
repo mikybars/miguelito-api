@@ -13,6 +13,24 @@
 		body { background-color: var(--main-background); }
 		#dark-mode-sel { float: right; }
 		[popover-bottom] { margin: 0; }
+		a#customize-button {
+			display: inline-block;
+			margin-top: .3rem;
+			background: none;
+		}
+		div#custom-path {
+			display: inline-flex;
+			margin-top: .3rem;
+		}
+		div#custom-path label {
+			text-align: right;
+		}
+		div#custom-path input {
+			display: inline;
+			padding: .0rem;
+			text-align: left;
+			border: 0;
+		}
 	</style>
 	<body>
 		<div class="row flex-right">
@@ -38,6 +56,12 @@
 					<div class="form-group">
 						<label for="url">Enter URL to shorten</label>
 						<input class="input-block" name="url" id="url" autocomplete="off" required>
+						<a id="customize-button" href="#">✨Customize</a>
+						<div id="custom-path">
+							<label for="custom-path">https://migueli.to/</label>
+							<input class="input" name="custom-path" id="custom-path"
+							autocomplete="off" spellcheck="false" placeholder="custom-path">
+						</div>
 					</div>
 					<div id="message" class="alert alert-primary"></div>
 					<input id="submit" class="paper-btn btn-primary" type="submit" value="Shorten link" disabled>
@@ -82,15 +106,27 @@
 			   `).attr('class', 'alert alert-success').show()
 			}
 
-			function shortenLink(apiUrl, longUrl) {
+			function showCustomize() {
+				$('#customize-button').hide()
+				$('div#custom-path').show()
+				$('input#custom-path').val('').focus()
+			}
+
+			function hideCustomize() {
+				$('#customize-button').show()
+				$('div#custom-path').hide()
+			}
+
+			function shortenLink(apiUrl, longUrl, customPath) {
 				$.ajax(apiUrl, {
 					type: 'POST',
-					data: JSON.stringify({url: longUrl})
+					data: JSON.stringify({url: longUrl, custom_path: customPath})
 				}).done(function (responseJSON) {
 					var protocol = window.location.protocol + '//'
 					var host = window.location.host + '/'
 					var shortUrl = protocol + host + responseJSON.path
 					displayShortenedUrl(shortUrl)
+					hideCustomize()
 				}).fail(function (data) {
 					if (data.status === 400) {
 						errorMessage(data.responseJSON.message)
@@ -104,7 +140,7 @@
 			$('form').submit(function(event) {
 				event.preventDefault()
 				waitingDots()
-				shortenLink(event.target.action, event.target.url.value)
+				shortenLink(event.target.action, event.target.url.value, event.target['custom-path'].value)
 			})
 			$('#url').on('input', function() {
 				$('#submit').attr('disabled', $(this).val().isEmpty())
@@ -116,11 +152,18 @@
 				toggleMode()
 				$('#url').focus()
 			})
+			$('#customize-button').on('click', showCustomize)
 			$(document).ready(function() {
 				$('#url').focus()
+				$('#custom-path').hide()
 				if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 					$('#dark-mode-toggle').prop('checked', true)
 					toggleMode()
+				}
+			})
+			$(document).keydown(function(event) {
+				if (event.key == "Escape" && $('input#custom-path').is(':focus')) {
+					hideCustomize()
 				}
 			})
 			</script>

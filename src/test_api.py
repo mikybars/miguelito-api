@@ -1,48 +1,105 @@
-import boto3
+import api
+import boto3, json
+from api import s3_client as s3
 from botocore.stub import Stubber
-import json
-from api import handle, s3_client
+from contextlib import contextmanager
+
+
+@contextmanager
+def link_exists_in_s3():
+    with Stubber(s3) as stubber:
+        stubber.add_response('head_object', {})
+        yield stubber
+
+
+@contextmanager
+def link_does_not_exist_in_s3():
+    with Stubber(s3) as stubber:
+        stubber.add_client_error('head_object', service_error_code='404')
+        stubber.add_response('put_object', {})
+        yield stubber
+
+
+def handle(event):
+    response = api.handle(event, context={})
+    return response['statusCode'], json.loads(response['body'])
 
 
 class TestApi:
     def test_valid_url(self):
-        with Stubber(s3_client) as stubber:
-            stubber.add_client_error('head_object', service_error_code='404')
-            stubber.add_response('put_object', {})
+        with link_does_not_exist_in_s3():
             event = {
                 'body': '{"url":"https://www.google.com/"}'
             }
-            r = handle(event, context={})
-            assert r['statusCode'] == 200
-            TestApi.assert_body_contains(r, 'message', 'success')
+
+            status, body = handle(event)
+
+            assert status == 200
+            assert body['message'] == 'success'
 
     def test_partial_url(self):
         event = {
             'body': '{"url":"www.google.com"}'
         }
-        r = handle(event, context={})
-        assert r['statusCode'] == 400
-        TestApi.assert_body_contains(r, 'message', 'invalid')
+
+        status, body = handle(event)
+
+        assert status == 400
+        assert 'invalid' in body['message']
+        assert 'path' not in body['message']
 
     def test_missing_url(self):
         event = {
             'body': '{}'
         }
-        r = handle(event, context={})
-        assert r['statusCode'] == 400
-        TestApi.assert_body_contains(r, 'message', 'required')
+
+        status, body = handle(event)
+
+        assert status == 400
+        assert 'required' in body['message']
+        assert 'path' not in body['message']
 
     def test_blank_url(self):
         event = {
             'body': '{"url":"  "}'
         }
-        r = handle(event, context={})
-        assert r['statusCode'] == 400
-        TestApi.assert_body_contains(r, 'message', 'required')
 
-    @staticmethod
-    def assert_body_contains(response, key, match):
-        assert 'body' in response
-        body = json.loads(response['body'])
-        assert key in body
-        assert match in body[key]
+        status, body = handle(event)
+
+        assert status == 400
+        assert 'required' in body['message']
+        assert 'path' not in body['message']
+
+    def test_valid_custom_path(self):
+        with link_does_not_exist_in_s3():
+            event = {
+                'body': '{"url":"https://www.google.com/", "custom_path": "custom"}'
+            }
+
+            status, body = handle(event)
+
+            assert status == 200
+            assert body['path'] == 'custom'
+
+    def test_blank_custom_path(self):
+        with link_does_not_exist_in_s3():
+            event = {
+                'body': '{"url":"https://www.google.com/", "custom_path": "  "}'
+            }
+
+            status, body = handle(event)
+
+            assert status == 200
+            assert len(body['path'].strip()) > 0
+
+    def test_custom_path_already_in_use(self):
+        with link_exists_in_s3():
+            event = {
+                'body': '{"url":"https://www.google.com/", "custom_path": "custom"}'
+            }
+
+            status, body = handle(event)
+
+            assert status == 400
+            assert 'already in use' in body['message']
+            assert 'path' not in body

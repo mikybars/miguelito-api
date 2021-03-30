@@ -71,17 +71,21 @@ def invalid_url(url):
     return not all([url_parsed.scheme, url_parsed.netloc, url_parsed.path])
 
 
-def extract_url(event):
-    body = defaultdict(str, json.loads(event['body']))
-    return body['url']
+def get_body(event):
+    return defaultdict(str, json.loads(event['body']))
 
 
 def handle(event, context):
     load_config()
-    origin_url = extract_url(event)
-    logger.warning(f'Received url shorten request for {origin_url}')
 
-    if not origin_url.strip():
+    body = get_body(event)
+    origin_url, custom_path = body['url'].strip(), body['custom_path'].strip()
+    if custom_path:
+        logger.warning(f'Shorten URL: {origin_url} (custom_path="/{custom_path}")')
+    else:
+        logger.warning(f'Shorten URL: {origin_url}')
+
+    if not origin_url:
         logger.error('URL is empty or missing')
         return build_response(400, "URL is required")
 
@@ -89,8 +93,15 @@ def handle(event, context):
         logger.error('URL is invalid')
         return build_response(400, "URL is invalid")
 
-    try:
+    if not custom_path:
         path = generate_path(7)
+    else:
+        if not is_path_free(custom_path):
+            logger.error(f'Path "/{custom_path}" is already in use')
+            return build_response(400, "Path is already in use")
+        path = custom_path
+
+    try:
         save_redirect(build_redirect(path, origin_url))
         return build_response(200, "success", path)
     except Exception as ex:
