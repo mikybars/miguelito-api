@@ -5,6 +5,8 @@ BUCKET_NAME := $(shell jq -r .bucket <config.json)
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 MKFILE_DIR  := $(dir $(MKFILE_PATH))
 
+export SLS_DEPRECATION_DISABLE=*
+
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		sort | \
@@ -23,8 +25,13 @@ test: venv      ## Run unit tests (in virtual env)
 	. venv/bin/activate
 	PYTHONPATH=$(MKFILE_DIR) pytest --cov
 
+# Example: make url=https://www.google.com path=google run
+run:            ## Invoke the Lambda function with the given params
+	sls generate-event -t aws:apiGateway -b '{"url":"$(url)", "custom_path": "$(path)"}' | \
+		sls invoke -f shorten
+
 deploy:         ## Deploy the service to AWS and upload static content
-	sls deploy -v
+	SLS_DEPRECATION_DISABLE= sls deploy -v
 	@echo Uploading static web files...
 	aws s3 sync static s3://$(BUCKET_NAME)/static
 	aws s3 cp index.html s3://$(BUCKET_NAME)
