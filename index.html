@@ -14,14 +14,19 @@
 		body { background-color: var(--main-background); }
 		#dark-mode-sel { float: right; }
 		[popover-bottom] { margin: 0; }
-		a#customize-button {
-			display: inline-block;
-			margin-top: .3rem;
+		.simple-button, .simple-button:active, .simple-button:hover, .simple-button:focus {
+			border: 0;
+			box-shadow: none;
 			background: none;
+			transform: none;
+		}
+		.inline-button {
+			margin: 0;
+			padding: 0;
 		}
 		div#custom-path {
 			display: inline-flex;
-			margin-top: .3rem;
+			padding: .75rem;
 		}
 		div#custom-path label {
 			text-align: right;
@@ -57,7 +62,7 @@
 					<div class="form-group">
 						<label for="url">Enter URL to shorten</label>
 						<input class="input-block" name="url" id="url" autocomplete="off" required>
-						<a id="customize-button" href="#">✨Customize</a>
+						<button type="button" class="simple-button" id="customize">✨Customize</button>
 						<div id="custom-path">
 							<label for="custom-path">https://migueli.to/</label>
 							<input class="input" name="custom-path" id="custom-path"
@@ -102,22 +107,33 @@
 			}
 
 			function displayShortenedUrl(longUrl, shortUrl) {
-				$('#message').html(`
-				   <a id="short-url" popover-left="${longUrl}" href="${shortUrl}">${shortUrl}</a>
-				   <a href="" onclick="copyLinkToClipboard(); return false;" popover-right="Copy to clipboard">
-				   <i class="far fa-clipboard"></i>
-					</a>
-			   `).attr('class', 'alert alert-success').show()
+				const link = $('<a></a>')
+				                .attr('id', 'short-url')
+				                .attr('href', shortUrl)
+				                .text(shortUrl)
+				                .attr('popover-left', longUrl)
+				const copyButton = $('<button></button>')
+				                .attr('type', 'button')
+				                .attr('popover-right', 'Copy to clipboard')
+				                .addClass('simple-button inline-button')
+				                .click(copyLinkToClipboard)
+				const icon = $('<i></i>')
+				                .addClass('far fa-clipboard')
+				$('#message').html('')
+				             .append(link)
+				             .append(copyButton.append(icon))
+				             .attr('class', 'alert alert-success')
+				             .show()
 			}
 
 			function showCustomize() {
-				$('#customize-button').hide()
+				$('button#customize').hide()
 				$('div#custom-path').show()
 				$('input#custom-path').val('').focus()
 			}
 
 			function resetCustomize() {
-				$('#customize-button').show()
+				$('button#customize').show()
 				$('div#custom-path').hide()
 				$('input#custom-path').val('')
 			}
@@ -166,7 +182,7 @@
 				toggleMode()
 				$('#url').focus()
 			})
-			$('#customize-button').on('click', showCustomize)
+			$('button#customize').on('click', showCustomize)
 			$(document).ready(function() {
 				$('#url').focus()
 				$('#custom-path').hide()
