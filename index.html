@@ -158,10 +158,13 @@
 					displayShortenedUrl(longUrl, shortUrl)
 					resetUi()
 				}).fail(function (data) {
+					if (data.responseJSON.detail) {
+						console.error(data.responseJSON.detail)
+					}
 					if (data.status === 400) {
 						errorMessage(data.responseJSON.message)
 					} else {
-						errorMessage('an unexpected error occurred')
+						errorMessage('unexpected error ¯\_(ツ)_/¯')
 					}
 					$('#url').select()
 				})

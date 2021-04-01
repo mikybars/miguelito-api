@@ -51,17 +51,20 @@ def generate_path(len):
     return generate_path(len)
 
 
-def build_response(status_code, msg, path=None):
-    body = {
-        "message": msg
-    }
-    if path:
-        body['path'] = path
+def fail(status_code, msg, detail=None):
+    return response(status_code, {"message": msg, "detail": detail})
+
+
+def ok(path):
+    return response(200, {"message": "success", "path": path})
+
+
+def response(status_code, body):
     return {
-        "statusCode": status_code,
         "headers": {
             "Access-Control-Allow-Origin": "*"
         },
+        "statusCode": status_code,
         "body": json.dumps(body)
     }
 
@@ -82,23 +85,27 @@ def handle(event, context):
 
     if not origin_url:
         logger.error('URL is empty or missing')
-        return build_response(400, "URL is required")
+        return fail(400, "URL is required")
 
     if not validate_url(origin_url):
         logger.error('URL is invalid')
-        return build_response(400, "URL is invalid")
+        return fail(400, "URL is invalid")
 
     if not custom_path:
         path = generate_path(7)
     else:
         if not is_path_free(custom_path):
             logger.error(f'Path "/{custom_path}" is already in use')
-            return build_response(400, "Path is already in use")
+            return fail(400, "Path is already in use")
         path = custom_path
 
     try:
         save_redirect(build_redirect(path, origin_url))
-        return build_response(200, "success", path)
+        return ok(path)
     except Exception as ex:
         logger.error(ex)
-        return build_response(500, "Error saving redirect")
+        err_msg = ex.response['Error']['Message']
+        if type(ex) == ClientError:
+            return fail(400, "URL is invalid", err_msg)
+        else:
+            return fail(500, "Error saving redirect", err_msg)
