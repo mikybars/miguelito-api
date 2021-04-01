@@ -11,11 +11,13 @@ provider:
   stage: ${file(config.json):stage}
   apiGateway:
     shouldStartNameWithService: true
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action:
-        - "s3:PutObject"
-      Resource: "arn:aws:s3:::${file(config.json):bucket}/*"
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "s3:PutObject"
+          Resource: "arn:aws:s3:::${file(config.json):bucket}/*"
 package:
   include:
     - src/api.py
