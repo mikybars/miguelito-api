@@ -104,8 +104,7 @@ def handle(event, context):
         return ok(path)
     except Exception as ex:
         logger.error(ex)
-        err_msg = ex.response['Error']['Message']
-        if type(ex) == ClientError:
-            return fail(400, "URL is invalid", err_msg)
+        if type(ex) == ClientError and ex.response['Error']['Code'] == 'InvalidRedirectLocation':
+            return fail(400, "URL is invalid", ex.response['Error']['Message'])
         else:
-            return fail(500, "Error saving redirect", err_msg)
+            return fail(500, "Error saving redirect", str(ex))
