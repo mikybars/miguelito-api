@@ -1,7 +1,6 @@
 .PHONY: help venv test deploy undeploy clean
 .DEFAULT_GOAL := help
 
-BUCKET_NAME := $(shell jq -r .bucket <config.json)
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 MKFILE_DIR  := $(dir $(MKFILE_PATH))
 
@@ -30,11 +29,8 @@ run:            ## Invoke the Lambda function with the given params
 	sls generate-event -t aws:apiGateway -b '{"url":"$(url)", "custom_path": "$(path)"}' | \
 		sls invoke -f shorten
 
-deploy:         ## Deploy the service to AWS and upload static content
+deploy:         ## Deploy the service to AWS
 	SLS_DEPRECATION_DISABLE= sls deploy -v
-	@echo Uploading static web files...
-	aws s3 sync static s3://$(BUCKET_NAME)/static
-	aws s3 cp index.html s3://$(BUCKET_NAME)
 
 undeploy:       ## Delete all the resources from AWS
 	sls remove
