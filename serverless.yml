@@ -4,11 +4,16 @@ useDotenv: true
 
 frameworkVersion: '2'
 
+custom:
+  bucketName: migueli.to
+
 provider:
   name: aws
   runtime: python3.8
-  region: ${file(config.json):region}
-  stage: ${file(config.json):stage}
+  region: eu-west-1
+  stage: dev
+  environment:
+    BUCKET_NAME: "${self:custom.bucketName}"
   apiGateway:
     shouldStartNameWithService: true
   iam:
@@ -17,12 +22,12 @@ provider:
         - Effect: "Allow"
           Action:
             - "s3:PutObject"
-          Resource: "arn:aws:s3:::${file(config.json):bucket}/*"
+          Resource: "arn:aws:s3:::${self:custom.bucketName}/*"
+
 package:
   include:
     - src/api.py
     - src/validators.py
-    - config.json
   exclude:
     - '**/*'
 
@@ -39,19 +44,19 @@ resources:
     ServerlessRedirectS3Bucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${file(config.json):bucket}
+        BucketName: ${self:custom.bucketName}
         AccessControl: PublicRead
         WebsiteConfiguration:
           IndexDocument: index.html
     ServerlessRedirectS3BucketPolicy:
       Type: AWS::S3::BucketPolicy
       Properties:
-        Bucket: ${file(config.json):bucket}
+        Bucket: ${self:custom.bucketName}
         PolicyDocument:
           Statement:
             - Action:
                 - "s3:GetObject"
               Effect: "Allow"
               Resource:
-                - arn:aws:s3:::${file(config.json):bucket}/*
+                - arn:aws:s3:::${self:custom.bucketName}/*
               Principal: "*"

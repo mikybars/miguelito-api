@@ -1,6 +1,7 @@
 import boto3
 import json
 import logging
+import os
 import string
 from src.validators import url as validate_url
 from collections import defaultdict
@@ -8,20 +9,13 @@ from random import choice
 from itertools import chain
 from botocore.exceptions import ClientError
 
-config = dict()
 s3_client = boto3.client('s3')
 logger = logging.getLogger()
 
 
-def load_config():
-    global config
-    with open('config.json') as f:
-        config = json.load(f)
-
-
 def build_redirect(path, origin_url=None):
     redirect = {
-        'Bucket': config['bucket'],
+        'Bucket': os.environ['BUCKET_NAME'],
         'Key': path
     }
     if origin_url:
@@ -74,8 +68,6 @@ def get_body(event):
 
 
 def handle(event, context):
-    load_config()
-
     body = get_body(event)
     origin_url, custom_path = body['url'].strip(), body['custom_path'].strip()
     if custom_path:
