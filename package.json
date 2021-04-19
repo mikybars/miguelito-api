@@ -1,5 +1,0 @@
-{
-	"name": "aws-lambda-url-shortener",
-	"description": "URL shortener built with Serverless and running in AWS Lambda",
-	"version": "1.1.0"
-}
