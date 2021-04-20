@@ -1,6 +1,7 @@
 .PHONY: help venv test deploy undeploy clean
 .DEFAULT_GOAL := help
 
+BUCKET_NAME := migueli.to
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 MKFILE_DIR  := $(dir $(MKFILE_PATH))
 
@@ -22,7 +23,7 @@ venv/marker: requirements.txt test-requirements.txt
 
 test: venv      ## Run unit tests (in virtual env)
 	. venv/bin/activate
-	PYTHONPATH=$(MKFILE_DIR) pytest --cov
+	PYTHONPATH=$(MKFILE_DIR) BUCKET_NAME=$(BUCKET_NAME) pytest --cov
 
 # Example: make url=https://www.google.com path=google run
 run:            ## Invoke the Lambda function with the given params
