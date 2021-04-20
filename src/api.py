@@ -75,10 +75,6 @@ def handle(event, context):
     else:
         logger.warning(f'Shorten URL: {origin_url}')
 
-    if not origin_url:
-        logger.error('URL is empty or missing')
-        return fail(400, "URL is required")
-
     if not validate_url(origin_url):
         logger.error('URL is invalid')
         return fail(400, "URL is invalid")

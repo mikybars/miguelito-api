@@ -16,6 +16,14 @@ provider:
     BUCKET_NAME: "${self:custom.bucketName}"
   apiGateway:
     shouldStartNameWithService: true
+    request:
+      schemas:
+        shorten-model:
+          name: Shorten
+          schema: ${file(schema/shorten.schema.json)}
+        shorten-custom-model:
+          name: ShortenCustom
+          schema: ${file(schema/shorten-custom.schema.json)}
   iam:
     role:
       statements:
@@ -39,10 +47,16 @@ functions:
           path: /shorten
           method: post
           cors: true
+          request:
+            schemas:
+              application/x-www-form-urlencoded: shorten-model
       - http:
           path: /shorten-custom
           method: post
           cors: true
+          request:
+            schemas:
+              application/x-www-form-urlencoded: shorten-custom-model
           authorizer:
             name: CognitoAuthorizer
             type: COGNITO_USER_POOLS

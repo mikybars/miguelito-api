@@ -48,28 +48,6 @@ class TestApi:
         assert 'invalid' in body['message']
         assert 'path' not in body['message']
 
-    def test_missing_url(self):
-        event = {
-            'body': '{}'
-        }
-
-        status, body = handle(event)
-
-        assert status == 400
-        assert 'required' in body['message']
-        assert 'path' not in body['message']
-
-    def test_blank_url(self):
-        event = {
-            'body': '{"url":"  "}'
-        }
-
-        status, body = handle(event)
-
-        assert status == 400
-        assert 'required' in body['message']
-        assert 'path' not in body['message']
-
     def test_domain_name_without_trailing_slash(self):
         with link_does_not_exist_in_s3():
             event = {
