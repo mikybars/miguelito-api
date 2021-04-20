@@ -36,8 +36,20 @@ functions:
     handler: src/api.handle
     events:
       - http:
-          path: /
+          path: /shorten
           method: post
+          cors: true
+      - http:
+          path: /shorten-custom
+          method: post
+          cors: true
+          authorizer:
+            name: CognitoAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - CognitoUserPool
+                - Arn
 
 resources:
   Resources:
