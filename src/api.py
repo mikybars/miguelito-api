@@ -13,7 +13,7 @@ s3_client = boto3.client('s3')
 logger = logging.getLogger()
 
 
-def build_redirect(path, origin_url=None):
+def create_redirect_object(path, origin_url=None):
     redirect = {
         'Bucket': os.environ['BUCKET_NAME'],
         'Key': path
@@ -23,13 +23,13 @@ def build_redirect(path, origin_url=None):
     return redirect
 
 
-def save_redirect(redirect):
+def upload_redirect_object(redirect):
     s3_client.put_object(**redirect)
 
 
 def is_path_free(path):
     try:
-        s3_client.head_object(**build_redirect(path))
+        s3_client.head_object(**create_redirect_object(path))
         return False
     except ClientError as ex:
         error_code = ex.response['Error']['Code']
@@ -67,6 +67,13 @@ def get_body(event):
     return defaultdict(str, json.loads(event['body']))
 
 
+def get_user(event):
+    try:
+        return event['requestContext']['authorizer']['claims']['email']
+    except:
+        return None
+
+
 def handle(event, context):
     body = get_body(event)
     origin_url, custom_path = body['url'].strip(), body['custom_path'].strip()
@@ -88,7 +95,11 @@ def handle(event, context):
         path = custom_path
 
     try:
-        save_redirect(build_redirect(path, origin_url))
+        redirect = create_redirect_object(path, origin_url)
+        user = get_user(event)
+        if user:
+            redirect['Metadata'] = { 'user': user }
+        upload_redirect_object(redirect)
         return ok(path)
     except Exception as ex:
         logger.error(ex)
