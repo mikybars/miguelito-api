@@ -25,8 +25,40 @@ def handle(event):
     return response['statusCode'], json.loads(response['body'])
 
 
+def valid_json(data):
+    try:
+        json.loads(data)
+        return True
+    except ValueError:
+        return False
+
+
 class TestShorten:
-    def test_valid_url(self):
+    def test_valid_ok_response(self):
+        with link_does_not_exist_in_s3():
+            event = {
+                'body': '{"url":"https://www.google.com/"}'
+            }
+
+            response = api.shorten(event, context={})
+
+            assert 'statusCode' in response and 'body' in response
+            assert valid_json(response['body'])
+            assert 'path' in json.loads(response['body'])
+
+    def test_valid_fail_response(self):
+        with link_does_not_exist_in_s3():
+            event = {
+                'body': '{}'
+            }
+
+            response = api.shorten(event, context={})
+
+            assert 'statusCode' in response and 'body' in response
+            assert valid_json(response['body'])
+            assert 'message' in json.loads(response['body'])
+
+    def test_valid_url_gets_shortened(self):
         with link_does_not_exist_in_s3():
             event = {
                 'body': '{"url":"https://www.google.com/"}'
