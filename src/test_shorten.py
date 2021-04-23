@@ -67,9 +67,9 @@ class TestShorten:
             status, body = handle(event)
 
             assert status == 200
-            assert body['message'] == 'success'
+            assert body['path'].isalnum()
 
-    def test_partial_url(self):
+    def test_partial_url_is_rejected(self):
         event = {
             'body': '{"url":"www.google.com"}'
         }
@@ -80,7 +80,7 @@ class TestShorten:
         assert 'invalid' in body['message']
         assert 'path' not in body['message']
 
-    def test_domain_name_without_trailing_slash(self):
+    def test_domain_name_without_trailing_slash_gets_shortened(self):
         with link_does_not_exist_in_s3():
             event = {
                 'body': '{"url":"https://www.google.com"}'
@@ -89,7 +89,7 @@ class TestShorten:
             status, body = handle(event)
 
             assert status == 200
-            assert body['message'] == 'success'
+            assert body['path'].isalnum()
 
     def test_valid_custom_path(self):
         with link_does_not_exist_in_s3():
@@ -102,7 +102,7 @@ class TestShorten:
             assert status == 200
             assert body['path'] == 'custom'
 
-    def test_blank_custom_path(self):
+    def test_blank_custom_path_gets_a_random_url(self):
         with link_does_not_exist_in_s3():
             event = {
                 'body': '{"url":"https://www.google.com/", "custom_path": "  "}'
@@ -111,9 +111,9 @@ class TestShorten:
             status, body = handle(event)
 
             assert status == 200
-            assert len(body['path'].strip()) > 0
+            assert body['path'].isalnum()
 
-    def test_custom_path_already_in_use(self):
+    def test_custom_path_already_in_use_is_rejected(self):
         with link_exists_in_s3():
             event = {
                 'body': '{"url":"https://www.google.com/", "custom_path": "custom"}'
