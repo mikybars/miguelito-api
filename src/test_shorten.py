@@ -21,11 +21,11 @@ def link_does_not_exist_in_s3():
 
 
 def handle(event):
-    response = api.handle(event, context={})
+    response = api.shorten(event, context={})
     return response['statusCode'], json.loads(response['body'])
 
 
-class TestApi:
+class TestShorten:
     def test_valid_url(self):
         with link_does_not_exist_in_s3():
             event = {

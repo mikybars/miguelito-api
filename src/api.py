@@ -11,11 +11,12 @@ from botocore.exceptions import ClientError
 
 s3_client = boto3.client('s3')
 logger = logging.getLogger()
+bucket_name = os.environ['BUCKET_NAME']
 
 
 def create_redirect_object(path, origin_url=None):
     redirect = {
-        'Bucket': os.environ['BUCKET_NAME'],
+        'Bucket': bucket_name,
         'Key': path
     }
     if origin_url:
@@ -49,8 +50,11 @@ def fail(status_code, msg, detail=None):
     return response(status_code, {"message": msg, "detail": detail})
 
 
-def ok(path):
-    return response(200, {"message": "success", "path": path})
+def ok(body):
+    if type(body) == str:
+        return response(200, {"message": "success", "path": body})
+    else:
+        return response(200, {"message": "success", "urls": body})
 
 
 def response(status_code, body):
@@ -63,18 +67,51 @@ def response(status_code, body):
     }
 
 
+def get_urls_by_user(user):
+    return (url for url in all_urls() if url["user"] == user)
+
+
+def all_urls():
+    urls = (url_details(k) for k in list_bucket())
+
+
+def list_bucket():
+    return (obj['Key'] for obj in s3_client.list_objects(Bucket=bucket_name)['Contents'])
+
+
+def url_details(path):
+    response = s3_client.head_object(Bucket=bucket_name, Key=path)
+    return {
+        "path": path,
+        "url": response['WebsiteRedirectLocation'],
+        "createdAt": response['LastModified'],
+        "user":  get_user(response)
+    }
+
+
 def get_body(event):
     return defaultdict(str, json.loads(event['body']))
 
 
-def get_user(event):
+def get_user(data):
     try:
-        return event['requestContext']['authorizer']['claims']['email']
-    except:
-        return None
+        return data['requestContext']['authorizer']['claims']['email']
+    except KeyError:
+        try:
+            return data['Metadata']['user']
+        except KeyError:
+            return None
 
 
-def handle(event, context):
+def get_urls(event, context):
+    try:
+        return ok(get_urls_by_user(get_user(event)))
+    except Exception as ex:
+        logger.error(ex)
+        return fail(500, "unexpected error", str(ex))
+
+
+def shorten(event, context):
     body = get_body(event)
     origin_url, custom_path = body['url'].strip(), body['custom_path'].strip()
     if custom_path:

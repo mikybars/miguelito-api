@@ -41,7 +41,7 @@ package:
 
 functions:
   shorten:
-    handler: src/api.handle
+    handler: src/api.shorten
     events:
       - http:
           path: /shorten
@@ -57,6 +57,21 @@ functions:
           request:
             schemas:
               application/x-www-form-urlencoded: shorten-custom-model
+          authorizer:
+            name: CognitoAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - CognitoUserPool
+                - Arn
+  getUrls:
+    handler: src/api.get_urls
+    description: List the URLs created by the current user
+    events:
+      - http:
+          path: /urls
+          method: get
+          cors: true
           authorizer:
             name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
