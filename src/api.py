@@ -1,27 +1,25 @@
 import boto3
 import json
 import logging
-import os
 import string
 from src.validators import url as validate_url
 from collections import defaultdict
 from random import choice
 from itertools import chain
 from botocore.exceptions import ClientError
+from os import environ as env
 
 s3_client = boto3.client('s3')
 logger = logging.getLogger()
-bucket_name = os.environ['BUCKET_NAME']
+bucket_name = env['BUCKET_NAME']
 
 
-def create_redirect_object(path, origin_url=None):
-    redirect = {
+def create_redirect_object(path, origin_url):
+    return {
         'Bucket': bucket_name,
-        'Key': path
+        'Key': path,
+        'WebsiteRedirectLocation': origin_url
     }
-    if origin_url:
-        redirect['WebsiteRedirectLocation'] = origin_url
-    return redirect
 
 
 def upload_redirect_object(redirect):
@@ -30,7 +28,7 @@ def upload_redirect_object(redirect):
 
 def is_path_free(path):
     try:
-        s3_client.head_object(**create_redirect_object(path))
+        s3_client.head_object(Bucket=bucket_name, Key=path)
         return False
     except ClientError as ex:
         error_code = ex.response['Error']['Code']
@@ -68,11 +66,11 @@ def response(status_code, body):
 
 
 def get_urls_by_user(user):
-    return (url for url in all_urls() if url["user"] == user)
+    return [url for url in all_urls() if url["user"] == user]
 
 
 def all_urls():
-    urls = (url_details(k) for k in list_bucket())
+    return (url_details(k) for k in list_bucket())
 
 
 def list_bucket():
@@ -83,8 +81,8 @@ def url_details(path):
     response = s3_client.head_object(Bucket=bucket_name, Key=path)
     return {
         "path": path,
-        "url": response['WebsiteRedirectLocation'],
-        "createdAt": response['LastModified'],
+        "url": response.get('WebsiteRedirectLocation'),
+        "createdAt": str(response.get('LastModified')),
         "user":  get_user(response)
     }
 

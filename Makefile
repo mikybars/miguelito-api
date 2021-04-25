@@ -23,7 +23,8 @@ venv/marker: requirements.txt test-requirements.txt
 
 test: venv      ## Run unit tests (in virtual env)
 	. venv/bin/activate
-	PYTHONPATH=$(MKFILE_DIR) BUCKET_NAME=$(BUCKET_NAME) pytest --cov
+	PYTHONPATH=$(MKFILE_DIR) BUCKET_NAME=$(BUCKET_NAME) \
+			   pytest --cov --cov-report html --cov-report term
 
 # Example: make url=https://www.google.com path=google run
 run:            ## Invoke the Lambda function with the given params
@@ -31,7 +32,7 @@ run:            ## Invoke the Lambda function with the given params
 		sls invoke -f shorten
 
 deploy:         ## Deploy the service to AWS
-	SLS_DEPRECATION_DISABLE= sls deploy -v
+	SLS_DEPRECATION_DISABLE="" sls deploy -v
 
 undeploy:       ## Delete all the resources from AWS
 	sls remove

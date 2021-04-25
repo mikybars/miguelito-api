@@ -20,6 +20,14 @@ def link_does_not_exist_in_s3():
         yield stubber
 
 
+@contextmanager
+def s3_write_error(code):
+    with Stubber(s3) as stubber:
+        stubber.add_client_error('head_object', service_error_code='404')
+        stubber.add_client_error('put_object', service_error_code=str(code))
+        yield stubber
+
+
 def handle(event):
     response = api.shorten(event, context={})
     return response['statusCode'], json.loads(response['body'])
@@ -124,3 +132,13 @@ class TestShorten:
             assert status == 400
             assert 'already in use' in body['message']
             assert 'path' not in body
+
+    def test_s3_error_gets_reported(self):
+        with s3_write_error(500):
+            event = {
+                'body': '{"url":"https://www.google.com/"}'
+            }
+
+            status, body = handle(event)
+
+            assert status == 500

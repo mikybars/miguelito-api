@@ -4,6 +4,7 @@ __pycache__/
 
 # Unit test / coverage reports
 .coverage
+htmlcov/
 
 # Environments
 .env
