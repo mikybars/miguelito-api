@@ -75,7 +75,7 @@ def s3_read_error(code):
 
 
 def handle(event):
-    response = api.get_urls(event, context={})
+    response = api.list_urls(event, context={})
     return response['statusCode'], json.loads(response['body'])
 
 
@@ -84,7 +84,7 @@ class TestGetUrls:
         with non_empty_bucket():
             event = request_by_user('user1')
 
-            response = api.get_urls(event, context={})
+            response = api.list_urls(event, context={})
 
             assert 'statusCode' in response and 'body' in response
             assert valid_json(response['body'])
@@ -94,7 +94,7 @@ class TestGetUrls:
         with s3_read_error(500):
             event = request_by_user('user1')
 
-            response = api.get_urls(event, context={})
+            response = api.list_urls(event, context={})
 
             assert 'statusCode' in response and 'body' in response
             assert response['statusCode'] == 500

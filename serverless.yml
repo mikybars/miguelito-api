@@ -41,7 +41,7 @@ package:
 
 functions:
   shorten:
-    handler: src/api.shorten
+    handler: src/api.shorten_url
     events:
       - http:
           path: /shorten
@@ -64,13 +64,28 @@ functions:
               Fn::GetAtt:
                 - CognitoUserPool
                 - Arn
-  getUrls:
-    handler: src/api.get_urls
+  list:
+    handler: src/api.list_urls
     description: List the URLs created by the current user
     events:
       - http:
           path: /urls
           method: get
+          cors: true
+          authorizer:
+            name: CognitoAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - CognitoUserPool
+                - Arn
+  delete:
+    handler: src/api.delete_url
+    description: Delete the specified URL if created by the current user
+    events:
+      - http:
+          path: /urls/{path}
+          method: delete
           cors: true
           authorizer:
             name: CognitoAuthorizer
@@ -97,6 +112,7 @@ resources:
           Statement:
             - Action:
                 - "s3:GetObject"
+                - "s3:DeleteObject"
               Effect: "Allow"
               Resource:
                 - arn:aws:s3:::${self:custom.bucketName}/*

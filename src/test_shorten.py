@@ -29,7 +29,7 @@ def s3_write_error(code):
 
 
 def handle(event):
-    response = api.shorten(event, context={})
+    response = api.shorten_url(event, context={})
     return response['statusCode'], json.loads(response['body'])
 
 
@@ -48,7 +48,7 @@ class TestShorten:
                 'body': '{"url":"https://www.google.com/"}'
             }
 
-            response = api.shorten(event, context={})
+            response = api.shorten_url(event, context={})
 
             assert 'statusCode' in response and 'body' in response
             assert valid_json(response['body'])
@@ -60,7 +60,7 @@ class TestShorten:
                 'body': '{}'
             }
 
-            response = api.shorten(event, context={})
+            response = api.shorten_url(event, context={})
 
             assert 'statusCode' in response and 'body' in response
             assert valid_json(response['body'])

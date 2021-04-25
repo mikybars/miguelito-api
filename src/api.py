@@ -44,25 +44,34 @@ def generate_path(len):
     return generate_path(len)
 
 
+def forbidden():
+    return response(403)
+
+
 def fail(status_code, msg, detail=None):
     return response(status_code, {"message": msg, "detail": detail})
 
 
-def ok(body):
-    if type(body) == str:
+def ok(body=None):
+    if body is None:
+        return response(200)
+    elif type(body) == str:
         return response(200, {"message": "success", "path": body})
     else:
         return response(200, {"message": "success", "urls": body})
 
 
-def response(status_code, body):
-    return {
+def response(status_code, body=None):
+    result = {
         "headers": {
             "Access-Control-Allow-Origin": "*"
         },
-        "statusCode": status_code,
-        "body": json.dumps(body)
+        "statusCode": status_code
     }
+    if body is not None:
+        result['body'] = json.dumps(body)
+
+    return result
 
 
 def get_urls_by_user(user):
@@ -101,7 +110,23 @@ def get_user(data):
             return None
 
 
-def get_urls(event, context):
+def delete_url(event, context):
+    user = get_user(event)
+    path = event['pathParameters']['path']
+    try:
+        obj = s3_client.head_object(Bucket=bucket_name, Key=path)
+        if get_user(obj) != user:
+            return forbidden()
+        s3_client.delete_object(Bucket=bucket_name, Key=path)
+        return ok()
+    except ClientError as ex:
+        error_code = ex.response['Error']['Code']
+        if error_code == '404':
+            return forbidden()
+        return fail(500, "unexpected error", str(ex))
+
+
+def list_urls(event, context):
     try:
         return ok(get_urls_by_user(get_user(event)))
     except Exception as ex:
@@ -109,7 +134,7 @@ def get_urls(event, context):
         return fail(500, "unexpected error", str(ex))
 
 
-def shorten(event, context):
+def shorten_url(event, context):
     body = get_body(event)
     origin_url, custom_path = body['url'].strip(), body['custom_path'].strip()
     if custom_path:
