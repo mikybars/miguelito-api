@@ -1,31 +1,21 @@
 import api
-import boto3, json
-from api import s3_client as s3
-from botocore.stub import Stubber
-from contextlib import contextmanager
+import json
+from test_contexts import url_already_existing, url_created_successfully, aws_s3_put_error
 
 
-@contextmanager
-def link_exists_in_s3():
-    with Stubber(s3) as stubber:
-        stubber.add_response('head_object', {})
-        yield stubber
+def body(url, custom_path=''):
+    return {
+        'body': json.dumps({
+            'url': url,
+            'custom_path': custom_path
+        })
+    }
 
 
-@contextmanager
-def link_does_not_exist_in_s3():
-    with Stubber(s3) as stubber:
-        stubber.add_client_error('head_object', service_error_code='404')
-        stubber.add_response('put_object', {})
-        yield stubber
-
-
-@contextmanager
-def s3_write_error(code):
-    with Stubber(s3) as stubber:
-        stubber.add_client_error('head_object', service_error_code='404')
-        stubber.add_client_error('put_object', service_error_code=str(code))
-        yield stubber
+def assert_bad_request(status, body):
+    assert status == 400
+    assert 'message' in body
+    assert 'path' not in body
 
 
 def handle(event):
@@ -33,112 +23,71 @@ def handle(event):
     return response['statusCode'], json.loads(response['body'])
 
 
-def valid_json(data):
-    try:
-        json.loads(data)
-        return True
-    except ValueError:
-        return False
-
-
 class TestShorten:
-    def test_valid_ok_response(self):
-        with link_does_not_exist_in_s3():
-            event = {
-                'body': '{"url":"https://www.google.com/"}'
-            }
+    def test_valid_url_ok(self):
+        with url_created_successfully():
+            event = body('https://www.google.com')
 
-            response = api.shorten_url(event, context={})
-
-            assert 'statusCode' in response and 'body' in response
-            assert valid_json(response['body'])
-            assert 'path' in json.loads(response['body'])
-
-    def test_valid_fail_response(self):
-        with link_does_not_exist_in_s3():
-            event = {
-                'body': '{}'
-            }
-
-            response = api.shorten_url(event, context={})
-
-            assert 'statusCode' in response and 'body' in response
-            assert valid_json(response['body'])
-            assert 'message' in json.loads(response['body'])
-
-    def test_valid_url_gets_shortened(self):
-        with link_does_not_exist_in_s3():
-            event = {
-                'body': '{"url":"https://www.google.com/"}'
-            }
-
-            status, body = handle(event)
+            status, resp = handle(event)
 
             assert status == 200
-            assert body['path'].isalnum()
+            assert 'path' in resp and 'links_to' in resp
+            assert resp['path'].isalnum()
+            assert resp['links_to'] == 'https://www.google.com'
 
-    def test_partial_url_is_rejected(self):
-        event = {
-            'body': '{"url":"www.google.com"}'
-        }
+    def test_domain_name_without_trailing_slash_ok(self):
+        with url_created_successfully():
+            event = body('https://www.google.com')
 
-        status, body = handle(event)
-
-        assert status == 400
-        assert 'invalid' in body['message']
-        assert 'path' not in body['message']
-
-    def test_domain_name_without_trailing_slash_gets_shortened(self):
-        with link_does_not_exist_in_s3():
-            event = {
-                'body': '{"url":"https://www.google.com"}'
-            }
-
-            status, body = handle(event)
+            status, resp = handle(event)
 
             assert status == 200
-            assert body['path'].isalnum()
+            assert resp['links_to'] == 'https://www.google.com'
 
-    def test_valid_custom_path(self):
-        with link_does_not_exist_in_s3():
-            event = {
-                'body': '{"url":"https://www.google.com/", "custom_path": "custom"}'
-            }
+    def test_custom_path_ok(self):
+        with url_created_successfully():
+            event = body('https://www.google.com/', 'custom')
 
-            status, body = handle(event)
+            status, resp = handle(event)
 
             assert status == 200
-            assert body['path'] == 'custom'
+            assert resp['path'] == 'custom'
 
     def test_blank_custom_path_gets_a_random_url(self):
-        with link_does_not_exist_in_s3():
-            event = {
-                'body': '{"url":"https://www.google.com/", "custom_path": "  "}'
-            }
+        with url_created_successfully():
+            event = body('https://www.google.com/', '  ')
 
-            status, body = handle(event)
+            status, resp = handle(event)
 
             assert status == 200
-            assert body['path'].isalnum()
+            assert resp['path'].isalnum()
+
+    def test_invalid_url_is_rejected(self):
+        event = body('invalid url')
+
+        status, resp = handle(event)
+
+        assert_bad_request(status, resp)
+
+    def test_partial_url_is_rejected(self):
+        event = body('www.google.com')
+
+        status, resp = handle(event)
+
+        assert_bad_request(status, resp)
 
     def test_custom_path_already_in_use_is_rejected(self):
-        with link_exists_in_s3():
-            event = {
-                'body': '{"url":"https://www.google.com/", "custom_path": "custom"}'
-            }
+        with url_already_existing():
+            event = body('https://www.google.com/', 'custom')
 
-            status, body = handle(event)
+            status, resp = handle(event)
 
-            assert status == 400
-            assert 'already in use' in body['message']
-            assert 'path' not in body
+            assert_bad_request(status, resp)
 
-    def test_s3_error_gets_reported(self):
-        with s3_write_error(500):
-            event = {
-                'body': '{"url":"https://www.google.com/"}'
-            }
+    def test_aws_error_gets_reported(self):
+        with aws_s3_put_error(403):
+            event = body('https://www.google.com/')
 
-            status, body = handle(event)
+            status, resp = handle(event)
 
             assert status == 500

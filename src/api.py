@@ -8,6 +8,7 @@ from random import choice
 from itertools import chain
 from botocore.exceptions import ClientError
 from src.validators import url as validate_url
+from src.repo import s3_client
 
 
 logger = logging.getLogger()
