@@ -8,11 +8,14 @@ from collections import defaultdict
 from random import choice
 from itertools import chain
 from botocore.exceptions import ClientError
-from src.validators import url as validate_url
+from src.validators import url as is_valid_url
 from src.repo import s3_client
 
 
 logger = logging.getLogger()
+
+class ValidationError(Exception):
+    pass
 
 
 def generate_path(len):
@@ -33,35 +36,43 @@ def get_user(data):
        return None
 
 
+def validate_url(url):
+    if not is_valid_url(url):
+        raise ValidationError("URL is invalid")
+
+
+def validate_custom_path(path):
+    if path and repo.find_by_path(path):
+        raise ValidationError("Path is already in use")
+
+
 def shorten_url(event, context):
     user = get_user(event)
     body = get_body(event)
-    origin_url, custom_path = body['url'].strip(), body['custom_path'].strip()
-    
-    if not validate_url(origin_url):
-        logger.error('URL is invalid')
-        return http.bad_request("URL is invalid")
-
-    if not custom_path:
-        path = generate_path(7)
-    elif not repo.find_by_path(custom_path):
-        path = custom_path
-    else:
-        logger.error(f'Path "/{custom_path}" is already in use')
-        return http.bad_request("Path is already in use")
+    url, path = body['url'].strip(), body['custom_path'].strip()
 
     try:
-        return http.ok(repo.save(path, origin_url, user))
+        validate_url(url)
+        validate_custom_path(path)
+
+        if not path:
+            path = generate_path(len=7)
+        
+        return http.ok(repo.save(path, url, user))
+    except ValidationError as ex:
+        logger.error(ex)
+        return http.bad_request(str(ex))
     except Exception as ex:
         logger.error(ex)
         if type(ex) == ClientError and ex.response['Error']['Code'] == 'InvalidRedirectLocation':
             return http.bad_request("URL is invalid", ex.response['Error']['Message'])
         else:
-            return http.server_error("Error saving redirect", str(ex))
+            return http.server_error("unexpected error", str(ex))
 
 
 def list_urls(event, context):
     user = get_user(event)
+    
     try:
         return http.ok(repo.find_by_user(user))
     except Exception as ex:
