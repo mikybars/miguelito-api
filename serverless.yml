@@ -29,7 +29,9 @@ provider:
       statements:
         - Effect: "Allow"
           Action:
+            - "s3:GetObject"
             - "s3:PutObject"
+            - "s3:DeleteObject"
           Resource: "arn:aws:s3:::${self:custom.bucketName}/*"
 
 package:
@@ -105,19 +107,6 @@ resources:
         AccessControl: PublicRead
         WebsiteConfiguration:
           IndexDocument: index.html
-    ServerlessRedirectS3BucketPolicy:
-      Type: AWS::S3::BucketPolicy
-      Properties:
-        Bucket: ${self:custom.bucketName}
-        PolicyDocument:
-          Statement:
-            - Action:
-                - "s3:GetObject"
-                - "s3:DeleteObject"
-              Effect: "Allow"
-              Resource:
-                - arn:aws:s3:::${self:custom.bucketName}/*
-              Principal: "*"
     CognitoUserPool:
       Type: AWS::Cognito::UserPool
       Properties:
