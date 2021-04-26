@@ -16,19 +16,6 @@ ShortUrlBase = namedtuple("ShortUrlBase", ["path", "links_to", "created_at", "ow
 class ShortUrl(ShortUrlBase):
     def is_owned_by(self, user):
         return self.owner == user
-    
-    def to_serializable(self):
-        return self._asdict()
-
-
-class UrlList:
-    def __init__(self, urls):
-        self._urls = urls
-
-    def to_serializable(self):
-        return {
-            "urls": [url.to_serializable() for url in self._urls]
-        }
 
 
 def find_by_path(path):
@@ -52,7 +39,7 @@ def find_by_user(user):
         print(url)
         if url.is_owned_by(user):
             result.append(url)
-    return UrlList(result)
+    return {"urls": result}
 
 
 def __list_bucket_keys():

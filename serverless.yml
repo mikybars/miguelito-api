@@ -20,10 +20,10 @@ provider:
       schemas:
         shorten-model:
           name: Shorten
-          schema: ${file(schema/shorten.schema.json)}
+          schema: ${file(models/shorten.schema.json)}
         shorten-custom-model:
           name: ShortenCustom
-          schema: ${file(schema/shorten-custom.schema.json)}
+          schema: ${file(models/shorten-custom.schema.json)}
   iam:
     role:
       statements:
@@ -48,18 +48,52 @@ functions:
     events:
       - http:
           path: /shorten
+          integration: lambda
           method: post
           cors: true
           request:
             schemas:
-              application/x-www-form-urlencoded: shorten-model
+              application/json: shorten-model
+            template:
+              application/x-www-form-urlencoded: null
+              application/json: '{ "url" : "$input.path("$.url")" }' 
+            passThrough: NEVER
+          response:
+            statusCodes:
+              200:
+                pattern: ''
+              400:
+                pattern: '(Path|URL).*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'
+              500:
+                pattern: 'An error occurred.*when calling.*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'
       - http:
           path: /shorten-custom
+          integration: lambda
           method: post
           cors: true
           request:
             schemas:
-              application/x-www-form-urlencoded: shorten-custom-model
+              application/json: shorten-custom-model
+            template:
+              application/x-www-form-urlencoded: null
+              application/json: '{
+                "url" : "$input.path("$.url")",
+                "custom_path" : "$input.path("$.custom_path")",
+                "user": "$context.authorizer.claims.email"
+              }'
+            passThrough: NEVER
+          response:
+            statusCodes:
+              200:
+                pattern: ''
+              400:
+                pattern: '(Path|URL).*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'
+              500:
+                pattern: 'An error occurred.*when calling.*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'
           authorizer:
             name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
@@ -73,8 +107,20 @@ functions:
     events:
       - http:
           path: /urls
+          integration: lambda
           method: get
           cors: true
+          request:
+            template:
+              application/x-www-form-urlencoded: null
+              application/json: '{ "user": "$context.authorizer.claims.email" }'     
+          response:
+            statusCodes:
+              200:
+                pattern: ''
+              500:
+                pattern: 'An error occurred.*when calling.*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'
           authorizer:
             name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
@@ -88,8 +134,27 @@ functions:
     events:
       - http:
           path: /urls/{path}
+          integration: lambda
           method: delete
           cors: true
+          request:
+            template:
+              application/x-www-form-urlencoded: null
+              application/json: '{
+                "path": "$input.params().path.get("path")",
+                "user": "$context.authorizer.claims.email"
+              }'
+          response:
+            statusCodes:
+              200:
+                pattern: ''
+                template: '{}'
+              403:
+                pattern: 'forbidden'
+                template: '{}'
+              500:
+                pattern: 'An error occurred.*when calling.*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'  
           authorizer:
             name: CognitoAuthorizer
             type: COGNITO_USER_POOLS

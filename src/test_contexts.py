@@ -73,25 +73,3 @@ def url_not_found():
     with Stubber(s3) as stubber:
         stubber.add_client_error('head_object', service_error_code='404')
         yield stubber
-
-
-@contextmanager
-def aws_s3_put_error(code):
-    with Stubber(s3) as stubber:
-        stubber.add_client_error('head_object', service_error_code='404')
-        stubber.add_client_error('put_object', service_error_code=str(code))
-        yield stubber
-
-
-@contextmanager
-def aws_s3_list_error(code):
-    with Stubber(s3) as stubber:
-        stubber.add_client_error('list_objects', service_error_code=str(code))
-        yield stubber
-
-
-@contextmanager
-def aws_s3_head_error(code):
-    with Stubber(s3) as stubber:
-        stubber.add_client_error('head_object', service_error_code=str(code))
-        yield stubber
