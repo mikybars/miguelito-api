@@ -69,6 +69,13 @@ class TestShorten:
 
         assert_bad_request(status, resp)
 
+    def test_invalid_path_is_rejected(self):
+        event = body('https://www.google.com', 'no spaces allowed')
+
+        status, resp = handle(event)
+
+        assert_bad_request(status, resp)
+
     def test_partial_url_is_rejected(self):
         event = body('www.google.com')
 

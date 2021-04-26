@@ -3,6 +3,7 @@ import logging
 import string
 import src.repo as repo
 import src.http_responses as http
+import re
 
 from collections import defaultdict
 from random import choice
@@ -42,7 +43,14 @@ def validate_url(url):
 
 
 def validate_custom_path(path):
-    if path and repo.find_by_path(path):
+    if not path:
+        return
+
+    path_format = "^[A-Za-z0-9_-]*$"
+    if not re.match(path_format, path):
+        raise ValidationError(f"Path does not match regex {path_format}")
+
+    if repo.find_by_path(path):
         raise ValidationError("Path is already in use")
 
 
@@ -72,7 +80,7 @@ def shorten_url(event, context):
 
 def list_urls(event, context):
     user = get_user(event)
-    
+
     try:
         return http.ok(repo.find_by_user(user))
     except Exception as ex:
