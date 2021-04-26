@@ -2,6 +2,7 @@ import json
 import logging
 import string
 import src.repo as repo
+import src.http_responses as http
 
 from collections import defaultdict
 from random import choice
@@ -19,38 +20,6 @@ def generate_path(len):
     if not repo.find_by_path(new_path):
         return new_path
     return generate_path(len)
-
-
-def forbidden():
-    return response(403)
-
-
-def fail(status_code, msg, detail=None):
-    return response(status_code, {"message": msg, "detail": detail})
-
-
-def ok(body=None):
-    if body is None:
-        return response(200)
-    else:
-        return response(200, body.to_serializable())
-
-
-def response(status_code, body=None):
-    result = {
-        "headers": {
-            "Access-Control-Allow-Origin": "*"
-        },
-        "statusCode": status_code
-    }
-    if body is not None:
-        result['body'] = json.dumps(__new_dict_without_nones(body))
-
-    return result
-
-
-def __new_dict_without_nones(data):
-    return {k: v for k, v in data.items() if v is not None}
 
 
 def get_body(event):
@@ -76,7 +45,7 @@ def shorten_url(event, context):
 
     if not validate_url(origin_url):
         logger.error('URL is invalid')
-        return fail(400, "URL is invalid")
+        return http.bad_request("URL is invalid")
 
     if not custom_path:
         path = generate_path(7)
@@ -84,25 +53,25 @@ def shorten_url(event, context):
         path = custom_path
     else:
         logger.error(f'Path "/{custom_path}" is already in use')
-        return fail(400, "Path is already in use")
+        return http.bad_request("Path is already in use")
 
     try:
-        return ok(repo.save(path, origin_url, user))
+        return http.ok(repo.save(path, origin_url, user))
     except Exception as ex:
         logger.error(ex)
         if type(ex) == ClientError and ex.response['Error']['Code'] == 'InvalidRedirectLocation':
-            return fail(400, "URL is invalid", ex.response['Error']['Message'])
+            return http.bad_request("URL is invalid", ex.response['Error']['Message'])
         else:
-            return fail(500, "Error saving redirect", str(ex))
+            return http.server_error("Error saving redirect", str(ex))
 
 
 def list_urls(event, context):
     user = get_user(event)
     try:
-        return ok(repo.find_by_user(user))
+        return http.ok(repo.find_by_user(user))
     except Exception as ex:
         logger.error(ex)
-        return fail(500, "unexpected error", str(ex))
+        return http.server_error("unexpected error", str(ex))
 
 
 def delete_url(event, context):
@@ -112,9 +81,9 @@ def delete_url(event, context):
     try:
         url = repo.find_by_path(path)
         if not url or not url.is_owned_by(user):
-            return forbidden()
+            return http.forbidden()
 
         repo.delete(url)
-        return ok()
+        return http.ok()
     except Exception as ex:
-        return fail(500, "unexpected error", str(ex))
+        return http.server_error("unexpected error", str(ex))
