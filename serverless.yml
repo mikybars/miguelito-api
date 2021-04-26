@@ -35,6 +35,7 @@ provider:
 package:
   include:
     - src/api.py
+    - src/repo.py
     - src/validators.py
   exclude:
     - '**/*'
