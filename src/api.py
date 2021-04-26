@@ -37,12 +37,7 @@ def shorten_url(event, context):
     user = get_user(event)
     body = get_body(event)
     origin_url, custom_path = body['url'].strip(), body['custom_path'].strip()
-    if custom_path:
-        logger.warning(
-            f'Shorten URL: {origin_url} (custom_path="/{custom_path}")')
-    else:
-        logger.warning(f'Shorten URL: {origin_url}')
-
+    
     if not validate_url(origin_url):
         logger.error('URL is invalid')
         return http.bad_request("URL is invalid")
