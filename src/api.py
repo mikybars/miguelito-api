@@ -1,13 +1,22 @@
+import logging
 import re
 import string
 
 import src.repo as repo
 
 from itertools import chain
+from os import environ as env
 from random import choice
 
 from src.validators import url as is_valid_url
 from src.repo import s3_client  # for testing
+
+
+LOGLEVEL = env.get('LOGLEVEL', 'WARN').upper()
+root_logger = logging.getLogger()
+handler = root_logger.handlers[0]
+root_logger.setLevel(LOGLEVEL)
+handler.setFormatter(logging.Formatter('[%(levelname)-8s] %(message)s'))
 
 
 def generate_path(len):

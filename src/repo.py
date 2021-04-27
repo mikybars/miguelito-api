@@ -1,15 +1,12 @@
 import boto3
-import logging
 
 from botocore.exceptions import ClientError
 from os import environ as env
 from collections import namedtuple
 from datetime import datetime
 
-
+BUCKET_NAME = env['BUCKET_NAME']
 s3_client = boto3.client('s3')
-logger = logging.getLogger()
-bucket_name = env['BUCKET_NAME']
 
 ShortUrlBase = namedtuple("ShortUrlBase", ["path", "links_to", "created_at", "owner"])
 
@@ -20,7 +17,7 @@ class ShortUrl(ShortUrlBase):
 
 def find_by_path(path):
     try:
-        response = s3_client.head_object(Bucket=bucket_name, Key=path)
+        response = s3_client.head_object(Bucket=BUCKET_NAME, Key=path)
         links_to = response.get('WebsiteRedirectLocation')
         created_at = response.get('LastModified')
         owner = response.get('Metadata', {}).get('user')
@@ -34,21 +31,19 @@ def find_by_path(path):
 def find_by_user(user):
     result = []
     for key in __list_bucket_keys():
-        print(key)
         url = find_by_path(key)
-        print(url)
         if url.is_owned_by(user):
             result.append(url)
     return {"urls": result}
 
 
 def __list_bucket_keys():
-    return (obj['Key'] for obj in s3_client.list_objects(Bucket=bucket_name)['Contents'])
+    return (obj['Key'] for obj in s3_client.list_objects(Bucket=BUCKET_NAME)['Contents'])
 
 
 def save(path, links_to, user=None):
     obj = {
-        'Bucket': bucket_name,
+        'Bucket': BUCKET_NAME,
         'Key': path,
         'WebsiteRedirectLocation': links_to
     }
@@ -61,4 +56,4 @@ def save(path, links_to, user=None):
 
 
 def delete(url):
-    s3_client.delete_object(Bucket=bucket_name, Key=url.path)
+    s3_client.delete_object(Bucket=BUCKET_NAME, Key=url.path)
