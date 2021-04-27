@@ -1,22 +1,14 @@
-- name: shorten endpoint does not accept invalid url
+- name: shorten endpoint ok
   endpoint:
     method: POST
     path: /shorten
   request:
     body:
-      url: invalid_url
+      url: https://www.google.com
   response:
-    status: 400
-
-- name: shorten endpoint does not accept incomplete url
-  endpoint:
-    method: POST
-    path: /shorten
-  request:
+    status: 200
     body:
-      url: www.google.com
-  response:
-    status: 400
+      links_to: https://www.google.com
 
 - name: unauthenticated users are not allowed custom paths
   endpoint:
