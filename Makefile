@@ -21,10 +21,13 @@ venv/marker: requirements.txt test-requirements.txt
 	pip3 install $(?:%=-r %)
 	touch $@
 
-test: venv      ## Run unit tests (in virtual env)
+unit-test: venv      ## Run unit tests (in virtual env)
 	. venv/bin/activate
 	PYTHONPATH=$(MKFILE_DIR) BUCKET_NAME=$(BUCKET_NAME) \
 			   pytest --cov --cov-report html --cov-report term
+
+integration-test:    ## Run integration tests via Serverless Framework
+	sls test
 
 # Example: make url=https://www.google.com path=google run
 run:            ## Invoke the Lambda function with the given params

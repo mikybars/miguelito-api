@@ -1,0 +1,68 @@
+- name: shorten endpoint does not accept invalid url
+  endpoint:
+    method: POST
+    path: /shorten
+  request:
+    body:
+      url: invalid_url
+  response:
+    status: 400
+
+- name: shorten endpoint does not accept incomplete url
+  endpoint:
+    method: POST
+    path: /shorten
+  request:
+    body:
+      url: www.google.com
+  response:
+    status: 400
+
+- name: unauthenticated users are not allowed custom paths
+  endpoint:
+    method: POST
+    path: /shorten
+  request:
+    body:
+      url: https://www.google.com
+      custom_path: custom
+  response:
+    status: 400
+
+- name: unauthenticated users are not allowed custom paths
+  endpoint:
+    method: POST
+    path: /shorten
+  request:
+    headers:
+      Content-Type: application/x-www-form-urlencoded
+    body:
+      url: https://www.google.com
+      custom_path: custom
+  response:
+    status: 415
+
+- name: unauthenticated users are not allowed custom paths
+  endpoint:
+    method: POST
+    path: /shorten-custom
+  request:
+    body:
+      url: https://www.google.com
+      custom_path: custom
+  response:
+    status: 401
+
+- name: unauthenticated users are not allowed to invoke list
+  endpoint:
+    method: GET
+    path: /urls
+  response:
+    status: 401
+
+- name: unauthenticated users are not allowed to invoke delete
+  endpoint:
+    method: DELETE
+    path: /urls/my-url
+  response:
+    status: 401
