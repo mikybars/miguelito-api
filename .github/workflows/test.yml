@@ -3,6 +3,8 @@ name: test
 on: push
 
 env:
+  GOOGLE_APP_ID: unwanted
+  GOOGLE_APP_SECRET: unwanted
   SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
   PY_COLORS: 1
 
