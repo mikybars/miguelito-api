@@ -9,7 +9,7 @@ from os import environ as env
 from random import choice
 
 from src.validators import url as is_valid_url
-from src.repo import s3_client  # for testing
+from src.repo import s3_client  # noqa: F401 (for testing)
 
 
 LOGLEVEL = env.get('LOGLEVEL', 'WARN').upper()
@@ -57,7 +57,7 @@ def shorten_url(event, context):
 
     if not path:
         path = generate_path(len=7)
-    
+
     return repo.save(path, url, user)
 
 

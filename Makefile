@@ -1,4 +1,4 @@
-.PHONY: help venv test deploy undeploy clean
+.PHONY: help venv lint unit-test integration-test deploy undeploy clean
 .DEFAULT_GOAL := help
 
 BUCKET_NAME := migueli.to
@@ -20,6 +20,9 @@ venv/marker: requirements.txt test-requirements.txt
 	. venv/bin/activate
 	pip3 install $(?:%=-r %)
 	touch $@
+
+lint:                ## Enforce linting rules through flake8
+	flake8 src
 
 unit-test: venv      ## Run unit tests (in virtual env)
 	. venv/bin/activate

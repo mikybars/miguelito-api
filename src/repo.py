@@ -10,6 +10,7 @@ s3_client = boto3.client('s3')
 
 ShortUrlBase = namedtuple("ShortUrlBase", ["path", "links_to", "created_at", "owner"])
 
+
 class ShortUrl(ShortUrlBase):
     def is_owned_by(self, user):
         return self.owner == user
