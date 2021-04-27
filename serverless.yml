@@ -35,12 +35,11 @@ provider:
           Resource: "arn:aws:s3:::${self:custom.bucketName}/*"
 
 package:
-  include:
+  patterns:
+    - '!**/*'
     - src/api.py
     - src/repo.py
     - src/validators.py
-  exclude:
-    - '**/*'
 
 functions:
   shorten:
