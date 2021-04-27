@@ -1,3 +1,5 @@
+org: mperezi
+app: url-shortener-app
 service: url-shortener
 
 useDotenv: true
