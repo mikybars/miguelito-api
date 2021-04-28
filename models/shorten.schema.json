@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "shorten",
+  "description": "The shorten API request model",
+  "type": "object",
+  "required": [ "url" ],
+  "additionalProperties": false,
+  "properties": {
+    "url": {
+      "type": "string",
+      "description": "The URL to shorten"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "shorten-custom",
+  "description": "The shorten with custom path API request model",
+  "type": "object",
+  "required": [ "url", "custom_path" ],
+  "properties": {
+    "url": {
+      "type": "string",
+      "description": "The URL to shorten"
+    },
+    "custom_path": {
+      "type": "string",
+      "description": "A custom path for the short URL generated"
+    }
+  }
+}

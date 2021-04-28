@@ -1,6 +1,7 @@
-.PHONY: help venv test deploy undeploy clean
+.PHONY: help venv lint unit-test integration-test deploy undeploy clean
 .DEFAULT_GOAL := help
 
+BUCKET_NAME := migueli.to
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 MKFILE_DIR  := $(dir $(MKFILE_PATH))
 
@@ -20,9 +21,16 @@ venv/marker: requirements.txt test-requirements.txt
 	pip3 install $(?:%=-r %)
 	touch $@
 
-test: venv      ## Run unit tests (in virtual env)
+lint:                ## Enforce linting rules through flake8
+	flake8 src
+
+unit-test: venv      ## Run unit tests (in virtual env)
 	. venv/bin/activate
-	PYTHONPATH=$(MKFILE_DIR) pytest --cov
+	PYTHONPATH=$(MKFILE_DIR) BUCKET_NAME=$(BUCKET_NAME) \
+			   pytest --cov --cov-report html --cov-report term
+
+integration-test:    ## Run integration tests via Serverless Framework
+	sls test
 
 # Example: make url=https://www.google.com path=google run
 run:            ## Invoke the Lambda function with the given params
@@ -30,7 +38,7 @@ run:            ## Invoke the Lambda function with the given params
 		sls invoke -f shorten
 
 deploy:         ## Deploy the service to AWS
-	SLS_DEPRECATION_DISABLE= sls deploy -v
+	SLS_DEPRECATION_DISABLE="" sls deploy -v
 
 undeploy:       ## Delete all the resources from AWS
 	sls remove

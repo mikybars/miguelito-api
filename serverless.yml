@@ -1,3 +1,5 @@
+org: mperezi
+app: url-shortener-app
 service: url-shortener
 
 useDotenv: true
@@ -16,28 +18,151 @@ provider:
     BUCKET_NAME: "${self:custom.bucketName}"
   apiGateway:
     shouldStartNameWithService: true
+    request:
+      schemas:
+        shorten-model:
+          name: Shorten
+          schema: ${file(models/shorten.schema.json)}
+        shorten-custom-model:
+          name: ShortenCustom
+          schema: ${file(models/shorten-custom.schema.json)}
   iam:
     role:
       statements:
         - Effect: "Allow"
           Action:
+            - "s3:GetObject"
             - "s3:PutObject"
+            - "s3:DeleteObject"
           Resource: "arn:aws:s3:::${self:custom.bucketName}/*"
 
 package:
-  include:
+  patterns:
+    - '!**/*'
     - src/api.py
+    - src/repo.py
     - src/validators.py
-  exclude:
-    - '**/*'
 
 functions:
   shorten:
-    handler: src/api.handle
+    handler: src/api.shorten_url
     events:
       - http:
-          path: /
+          path: /shorten
+          integration: lambda
           method: post
+          cors: true
+          request:
+            schemas:
+              application/json: shorten-model
+            template:
+              application/x-www-form-urlencoded: null
+              application/json: '{ "url" : "$input.path("$.url")" }' 
+            passThrough: NEVER
+          response:
+            statusCodes:
+              200:
+                pattern: ''
+              400:
+                pattern: '(Path|URL).*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'
+              500:
+                pattern: 'An error occurred.*when calling.*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'
+      - http:
+          path: /shorten-custom
+          integration: lambda
+          method: post
+          cors: true
+          request:
+            schemas:
+              application/json: shorten-custom-model
+            template:
+              application/x-www-form-urlencoded: null
+              application/json: '{
+                "url" : "$input.path("$.url")",
+                "custom_path" : "$input.path("$.custom_path")",
+                "user": "$context.authorizer.claims.email"
+              }'
+            passThrough: NEVER
+          response:
+            statusCodes:
+              200:
+                pattern: ''
+              400:
+                pattern: '(Path|URL).*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'
+              500:
+                pattern: 'An error occurred.*when calling.*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'
+          authorizer:
+            name: CognitoAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - CognitoUserPool
+                - Arn
+  list:
+    handler: src/api.list_urls
+    description: List the URLs created by the current user
+    events:
+      - http:
+          path: /urls
+          integration: lambda
+          method: get
+          cors: true
+          request:
+            template:
+              application/x-www-form-urlencoded: null
+              application/json: '{ "user": "$context.authorizer.claims.email" }'     
+          response:
+            statusCodes:
+              200:
+                pattern: ''
+              500:
+                pattern: 'An error occurred.*when calling.*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'
+          authorizer:
+            name: CognitoAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - CognitoUserPool
+                - Arn
+  delete:
+    handler: src/api.delete_url
+    description: Delete the specified URL if created by the current user
+    events:
+      - http:
+          path: /urls/{path}
+          integration: lambda
+          method: delete
+          cors: true
+          request:
+            template:
+              application/x-www-form-urlencoded: null
+              application/json: '{
+                "path": "$input.params().path.get("path")",
+                "user": "$context.authorizer.claims.email"
+              }'
+          response:
+            statusCodes:
+              200:
+                pattern: ''
+                template: '{}'
+              403:
+                pattern: 'forbidden'
+                template: '{}'
+              500:
+                pattern: 'An error occurred.*when calling.*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'  
+          authorizer:
+            name: CognitoAuthorizer
+            type: COGNITO_USER_POOLS
+            arn:
+              Fn::GetAtt:
+                - CognitoUserPool
+                - Arn
 
 resources:
   Resources:
@@ -48,15 +173,46 @@ resources:
         AccessControl: PublicRead
         WebsiteConfiguration:
           IndexDocument: index.html
-    ServerlessRedirectS3BucketPolicy:
-      Type: AWS::S3::BucketPolicy
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
       Properties:
-        Bucket: ${self:custom.bucketName}
-        PolicyDocument:
-          Statement:
-            - Action:
-                - "s3:GetObject"
-              Effect: "Allow"
-              Resource:
-                - arn:aws:s3:::${self:custom.bucketName}/*
-              Principal: "*"
+        UserPoolName: miguelito-users
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: miguelito-web
+        GenerateSecret: false
+        UserPoolId:
+          Ref: CognitoUserPool
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthFlows:
+          - code
+        AllowedOAuthScopes:
+          - openid
+        CallbackURLs:
+          - http://localhost:8080
+        LogoutURLs:
+          - http://localhost:8080/logout.html
+        SupportedIdentityProviders:
+          - Google
+    CognitoUserPoolIdentityProvider:
+      Type: AWS::Cognito::UserPoolIdentityProvider
+      Properties:
+        ProviderName: Google
+        AttributeMapping:
+          email: email
+          given_name: given_name
+        ProviderDetails:
+          client_id: ${env:GOOGLE_APP_ID}.apps.googleusercontent.com
+          client_secret: ${env:GOOGLE_APP_SECRET}
+          authorize_scopes: email openid profile
+        ProviderType: Google
+        UserPoolId:
+          Ref: CognitoUserPool
+  Outputs:
+    UserPoolId:
+      Value:
+        Ref: CognitoUserPool
+    UserPoolClientId:
+      Value:
+        Ref: CognitoUserPoolClient

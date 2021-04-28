@@ -1,102 +1,77 @@
-import boto3
-import json
 import logging
-import os
+import re
 import string
-from src.validators import url as validate_url
-from collections import defaultdict
-from random import choice
+
+import src.repo as repo
+
 from itertools import chain
-from botocore.exceptions import ClientError
+from os import environ as env
+from random import choice
 
-s3_client = boto3.client('s3')
-logger = logging.getLogger()
-
-
-def build_redirect(path, origin_url=None):
-    redirect = {
-        'Bucket': os.environ['BUCKET_NAME'],
-        'Key': path
-    }
-    if origin_url:
-        redirect['WebsiteRedirectLocation'] = origin_url
-    return redirect
+from src.validators import url as is_valid_url
+from src.repo import s3_client  # noqa: F401 (for testing)
 
 
-def save_redirect(redirect):
-    s3_client.put_object(**redirect)
-
-
-def is_path_free(path):
-    try:
-        s3_client.head_object(**build_redirect(path))
-        return False
-    except ClientError as ex:
-        error_code = ex.response['Error']['Code']
-        if error_code == '404':
-            return True
-        raise ex
+LOGLEVEL = env.get('LOGLEVEL', 'WARN').upper()
+root_logger = logging.getLogger()
+handler = root_logger.handlers[0]
+root_logger.setLevel(LOGLEVEL)
+handler.setFormatter(logging.Formatter('[%(levelname)-8s] %(message)s'))
 
 
 def generate_path(len):
     new_path = ''.join(choice(list(chain(string.ascii_letters, string.digits))) for c in range(len))
-    if is_path_free(new_path):
-        return new_path
-    return generate_path(len)
+    if repo.find_by_path(new_path):
+        return generate_path(len)
+    return new_path
 
 
-def fail(status_code, msg, detail=None):
-    return response(status_code, {"message": msg, "detail": detail})
+def validate_url(url):
+    if not is_valid_url(url):
+        raise Exception("URL is invalid")
 
 
-def ok(path):
-    return response(200, {"message": "success", "path": path})
+def validate_custom_path(path):
+    if not path:
+        return
+
+    path_format = "^[A-Za-z0-9_-]*$"
+    if not re.match(path_format, path):
+        raise Exception(f"Path does not match regex {path_format}")
+
+    if repo.find_by_path(path):
+        raise Exception("Path is already in use")
 
 
-def response(status_code, body):
-    return {
-        "headers": {
-            "Access-Control-Allow-Origin": "*"
-        },
-        "statusCode": status_code,
-        "body": json.dumps(body)
-    }
-
-
-def get_body(event):
-    return defaultdict(str, json.loads(event['body']))
-
-
-def handle(event, context):
-    body = get_body(event)
-    origin_url, custom_path = body['url'].strip(), body['custom_path'].strip()
-    if custom_path:
-        logger.warning(f'Shorten URL: {origin_url} (custom_path="/{custom_path}")')
+def shorten_url(event, context):
+    if 'custom_path' in event:
+        url, path, user = [v.strip() for v in event.values()]
+        iter
     else:
-        logger.warning(f'Shorten URL: {origin_url}')
+        url, = [v.strip() for v in event.values()]
+        path = None
+        user = None
 
-    if not origin_url:
-        logger.error('URL is empty or missing')
-        return fail(400, "URL is required")
+    validate_url(url)
+    validate_custom_path(path)
 
-    if not validate_url(origin_url):
-        logger.error('URL is invalid')
-        return fail(400, "URL is invalid")
+    if not path:
+        path = generate_path(len=7)
 
-    if not custom_path:
-        path = generate_path(7)
-    else:
-        if not is_path_free(custom_path):
-            logger.error(f'Path "/{custom_path}" is already in use')
-            return fail(400, "Path is already in use")
-        path = custom_path
+    return repo.save(path, url, user)
 
-    try:
-        save_redirect(build_redirect(path, origin_url))
-        return ok(path)
-    except Exception as ex:
-        logger.error(ex)
-        if type(ex) == ClientError and ex.response['Error']['Code'] == 'InvalidRedirectLocation':
-            return fail(400, "URL is invalid", ex.response['Error']['Message'])
-        else:
-            return fail(500, "Error saving redirect", str(ex))
+
+def list_urls(event, context):
+    user, = event.values()
+
+    return repo.find_by_user(user)
+
+
+def delete_url(event, context):
+    path, user = event.values()
+
+    url = repo.find_by_path(path)
+    if not url or not url.is_owned_by(user):
+        raise Exception('forbidden')
+
+    repo.delete(url)
