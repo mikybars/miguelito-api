@@ -1,0 +1,36 @@
+Resources: 
+  RedirectBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !If [IsPro, "${self:custom.rootDomain}", "dev.${self:custom.rootDomain}"]
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Condition: IsPro
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Origins:
+          - Id: RedirectBucketOrigin
+            DomainName: !Select [1, !Split ["://", !GetAtt RedirectBucket.WebsiteURL]]
+            OriginPath: /index.html
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+        CustomErrorResponses:
+          - ErrorCode: '404'
+            ResponsePagePath: "/404.html"
+            ResponseCode: '200'
+            ErrorCachingMinTTL: '30'
+        Aliases:
+          - ${self:custom.rootDomain}
+        ViewerCertificate:
+          AcmCertificateArn: ${self:custom.certificateArn}
+          SslSupportMethod: sni-only
+        DefaultCacheBehavior:
+          TargetOriginId: RedirectBucketOrigin
+          ViewerProtocolPolicy: 'redirect-to-https'
+          DefaultTTL: 30
+          ForwardedValues:
+            QueryString: false

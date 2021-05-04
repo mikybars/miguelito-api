@@ -1,0 +1,33 @@
+Resources:
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: ${self:custom.rootDomain}-users-${self:provider.stage}
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    DependsOn: CognitoUserPoolIdentityProvider
+    Properties:
+      ClientName: ${self:custom.rootDomain}-web
+      GenerateSecret: false
+      UserPoolId:
+        Ref: CognitoUserPool
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:  [ code ]
+      AllowedOAuthScopes: [ openid ]
+      CallbackURLs: [ http://localhost:8080 ]
+      LogoutURLs:   [ http://localhost:8080/logout.html ]
+      SupportedIdentityProviders: [ Google ]
+  CognitoUserPoolIdentityProvider:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties:
+      ProviderName: Google
+      AttributeMapping:
+        email: email
+        given_name: given_name
+      ProviderDetails:
+        client_id: ${env:GOOGLE_APP_ID}.apps.googleusercontent.com
+        client_secret: ${env:GOOGLE_APP_SECRET}
+        authorize_scopes: email openid profile
+      ProviderType: Google
+      UserPoolId:
+        Ref: CognitoUserPool

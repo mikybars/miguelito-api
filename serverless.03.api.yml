@@ -1,19 +1,22 @@
-org: mperezi
-app: url-shortener-app
-service: url-shortener
-
-useDotenv: true
+# org: mperezi
+app: url-shortener
+service: ${self:app}-api
 
 frameworkVersion: '2'
+useDotenv: true
+unresolvedVariablesNotificationMode: error
+variablesResolutionMode: 20210326
+disabledDeprecations:
+  - LAMBDA_HASHING_VERSION_V2
 
-custom:
-  bucketName: migueli.to
+plugins:
+  - serverless-domain-manager
 
 provider:
   name: aws
   runtime: python3.8
-  region: eu-west-1
-  stage: dev
+  region: ${opt:region, 'eu-west-1'}
+  stage: ${opt:stage, 'dev'}
   environment:
     BUCKET_NAME: "${self:custom.bucketName}"
   apiGateway:
@@ -36,6 +39,19 @@ provider:
             - "s3:DeleteObject"
           Resource: "arn:aws:s3:::${self:custom.bucketName}/*"
 
+custom:
+  stacks:
+    dev: dev
+    v1: pro
+    v2: pro
+  stack: ${self:custom.stacks.${self:provider.stage}}
+  bucketName: ${cf:${self:app}-resources-${self:custom.stack}.RedirectBucketName}
+  customDomain:
+    domainName: api.${cf:${self:app}-dns.RootDomain}
+    certificateArn: ${env:CERTIFICATE_ARN}
+    basePath: ${self:provider.stage}
+    createRoute53Record: true
+
 package:
   patterns:
     - '!**/*'
@@ -57,7 +73,7 @@ functions:
               application/json: shorten-model
             template:
               application/x-www-form-urlencoded: null
-              application/json: '{ "url" : "$input.path("$.url")" }' 
+              application/json: '{ "url" : "$input.path("$.url")" }'
             passThrough: NEVER
           response:
             statusCodes:
@@ -98,10 +114,7 @@ functions:
           authorizer:
             name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
-            arn:
-              Fn::GetAtt:
-                - CognitoUserPool
-                - Arn
+            arn: "${cf:${self:app}-resources-${self:custom.stack}.UserPoolArn}"
   list:
     handler: src/api.list_urls
     description: List the URLs created by the current user
@@ -114,7 +127,7 @@ functions:
           request:
             template:
               application/x-www-form-urlencoded: null
-              application/json: '{ "user": "$context.authorizer.claims.email" }'     
+              application/json: '{ "user": "$context.authorizer.claims.email" }'
           response:
             statusCodes:
               200:
@@ -125,10 +138,7 @@ functions:
           authorizer:
             name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
-            arn:
-              Fn::GetAtt:
-                - CognitoUserPool
-                - Arn
+            arn: "${cf:${self:app}-resources-${self:custom.stack}.UserPoolArn}"
   delete:
     handler: src/api.delete_url
     description: Delete the specified URL if created by the current user
@@ -155,64 +165,8 @@ functions:
                 template: '{}'
               500:
                 pattern: 'An error occurred.*when calling.*'
-                template: '{ "message": "$input.path("$.errorMessage")" }'  
+                template: '{ "message": "$input.path("$.errorMessage")" }'
           authorizer:
             name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
-            arn:
-              Fn::GetAtt:
-                - CognitoUserPool
-                - Arn
-
-resources:
-  Resources:
-    ServerlessRedirectS3Bucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:custom.bucketName}
-        AccessControl: PublicRead
-        WebsiteConfiguration:
-          IndexDocument: index.html
-    CognitoUserPool:
-      Type: AWS::Cognito::UserPool
-      Properties:
-        UserPoolName: miguelito-users
-    CognitoUserPoolClient:
-      Type: AWS::Cognito::UserPoolClient
-      Properties:
-        ClientName: miguelito-web
-        GenerateSecret: false
-        UserPoolId:
-          Ref: CognitoUserPool
-        AllowedOAuthFlowsUserPoolClient: true
-        AllowedOAuthFlows:
-          - code
-        AllowedOAuthScopes:
-          - openid
-        CallbackURLs:
-          - http://localhost:8080
-        LogoutURLs:
-          - http://localhost:8080/logout.html
-        SupportedIdentityProviders:
-          - Google
-    CognitoUserPoolIdentityProvider:
-      Type: AWS::Cognito::UserPoolIdentityProvider
-      Properties:
-        ProviderName: Google
-        AttributeMapping:
-          email: email
-          given_name: given_name
-        ProviderDetails:
-          client_id: ${env:GOOGLE_APP_ID}.apps.googleusercontent.com
-          client_secret: ${env:GOOGLE_APP_SECRET}
-          authorize_scopes: email openid profile
-        ProviderType: Google
-        UserPoolId:
-          Ref: CognitoUserPool
-  Outputs:
-    UserPoolId:
-      Value:
-        Ref: CognitoUserPool
-    UserPoolClientId:
-      Value:
-        Ref: CognitoUserPoolClient
+            arn: "${cf:${self:app}-resources-${self:custom.stack}.UserPoolArn}"

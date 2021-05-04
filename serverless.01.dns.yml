@@ -1,0 +1,33 @@
+org: mperezi
+app: url-shortener
+service: ${self:app}-dns
+
+frameworkVersion: '2'
+useDotenv: true
+unresolvedVariablesNotificationMode: error
+variablesResolutionMode: 20210326
+disabledDeprecations:
+  - LAMBDA_HASHING_VERSION_V2
+
+provider:
+  name: aws
+  region: eu-west-1
+  stackName: ${self:service}
+
+custom:
+  rootDomain: ${env:DOMAIN_NAME}
+
+resources:
+  Resources:
+    DNSZone:
+      Type: AWS::Route53::HostedZone
+      Properties: 
+        Name: ${self:custom.rootDomain}
+  Outputs:
+    RootDomain:
+      Value: ${self:custom.rootDomain}
+      Export:
+        Name: RootDomain
+
+outputs:
+  NameServers: !Join [', ', !GetAtt DNSZone.NameServers]
