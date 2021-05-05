@@ -19,7 +19,7 @@ class TestGetUrls:
 
             assert 'urls' in resp
             assert len(resp['urls']) == 1
-            assert resp['urls'][0].owner == 'user1'
+            assert resp['urls'][0].user == 'user1'
             assert resp['urls'][0].links_to == 'user1_link'
 
     def test_user_without_urls_gets_empty_list(self):

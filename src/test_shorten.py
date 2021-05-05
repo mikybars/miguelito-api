@@ -30,7 +30,7 @@ class TestShorten:
             assert resp.links_to == 'https://www.google.com'
 
     def test_custom_path_ok(self):
-        with url_created_successfully():
+        with url_created_successfully(with_user=True):
             event = body(url='https://www.google.com/', custom_path='custom', user='user1')
 
             resp = handle(event)
@@ -38,7 +38,7 @@ class TestShorten:
             assert resp.path == 'custom'
 
     def test_blank_custom_path_gets_a_random_url(self):
-        with url_created_successfully():
+        with url_created_successfully(with_user=True):
             event = body(url='https://www.google.com/', custom_path='  ', user='user1')
 
             resp = handle(event)

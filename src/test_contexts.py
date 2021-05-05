@@ -1,4 +1,4 @@
-from api import s3_client as s3
+from api import s3_client as s3, table as dynamodb
 from botocore.stub import Stubber
 from contextlib import contextmanager
 from os import environ as env
@@ -36,11 +36,13 @@ def url_already_existing():
 
 
 @contextmanager
-def url_created_successfully():
-    with Stubber(s3) as stubber:
-        stubber.add_client_error('head_object', service_error_code='404')
-        stubber.add_response('put_object', {})
-        yield stubber
+def url_created_successfully(with_user=False):
+    with Stubber(s3) as s3_stubber, Stubber(dynamodb.meta.client) as db_stubber:
+        s3_stubber.add_client_error('head_object', service_error_code='404')
+        s3_stubber.add_response('put_object', {})
+        if with_user:
+            db_stubber.add_response('put_item', {})
+        yield s3_stubber
 
 
 @contextmanager

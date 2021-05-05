@@ -6,6 +6,7 @@
 .DEFAULT_GOAL := help
 
 BUCKET_NAME := migueli.to
+TABLE_NAME  := Url2
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 MKFILE_DIR  := $(dir $(MKFILE_PATH))
 STAGE       := dev
@@ -29,7 +30,7 @@ lint:                ## Enforce linting rules through flake8
 
 unit-test: venv      ## Run unit tests (in virtual env)
 	. venv/bin/activate
-	PYTHONPATH=$(MKFILE_DIR) BUCKET_NAME=$(BUCKET_NAME) \
+	PYTHONPATH=$(MKFILE_DIR) BUCKET_NAME=$(BUCKET_NAME) TABLE_NAME=$(TABLE_NAME) \
 			   pytest --cov --cov-report html --cov-report term
 
 integration-test:    ## Run integration tests via Serverless Framework

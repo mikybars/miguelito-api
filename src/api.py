@@ -9,7 +9,7 @@ from os import environ as env
 from random import choice
 
 from src.validators import url as is_valid_url
-from src.repo import s3_client  # noqa: F401 (for testing)
+from src.repo import s3_client, table  # noqa: F401 (for testing)
 
 
 LOGLEVEL = env.get('LOGLEVEL', 'WARN').upper()

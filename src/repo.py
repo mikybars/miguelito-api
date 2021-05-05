@@ -7,13 +7,14 @@ from datetime import datetime
 
 BUCKET_NAME = env['BUCKET_NAME']
 s3_client = boto3.client('s3')
+table = boto3.resource('dynamodb').Table(env['TABLE_NAME'])
 
-ShortUrlBase = namedtuple("ShortUrlBase", ["path", "links_to", "created_at", "owner"])
+ShortUrlBase = namedtuple("ShortUrlBase", ["path", "links_to", "created_at", "user"])
 
 
 class ShortUrl(ShortUrlBase):
     def is_owned_by(self, user):
-        return self.owner == user
+        return self.user == user
 
 
 def find_by_path(path):
@@ -43,17 +44,16 @@ def __list_bucket_keys():
 
 
 def save(path, links_to, user=None):
+    new_url = ShortUrl(path, links_to, str(datetime.now()), user)
     obj = {
         'Bucket': BUCKET_NAME,
         'Key': path,
         'WebsiteRedirectLocation': links_to
     }
     if user is not None:
-        obj['Metadata'] = {
-            'user': user
-        }
+        table.put_item(Item=new_url._asdict())
     s3_client.put_object(**obj)
-    return ShortUrl(path, links_to, str(datetime.now()), user)
+    return new_url
 
 
 def delete(url):

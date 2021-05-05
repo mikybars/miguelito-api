@@ -39,6 +39,10 @@ provider:
             - "s3:PutObject"
             - "s3:DeleteObject"
           Resource: "arn:aws:s3:::${self:custom.bucketName}/*"
+        - Effect: "Allow"
+          Action:
+            - "dynamodb:PutItem"
+          Resource: "arn:aws:dynamodb:*:*:table/${self:custom.tableName}"
 
 custom:
   stacks:
