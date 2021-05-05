@@ -19,6 +19,7 @@ provider:
   stage: ${opt:stage, 'dev'}
   environment:
     BUCKET_NAME: "${self:custom.bucketName}"
+    TABLE_NAME: "${self:custom.tableName}"
   apiGateway:
     shouldStartNameWithService: true
     request:
@@ -46,6 +47,7 @@ custom:
     v2: pro
   stack: ${self:custom.stacks.${self:provider.stage}}
   bucketName: ${cf:${self:app}-resources-${self:custom.stack}.RedirectBucketName}
+  tableName: ${cf:${self:app}-resources-${self:custom.stack}.DynamoDBTableName}
   customDomain:
     domainName: api.${cf:${self:app}-dns.RootDomain}
     certificateArn: ${env:CERTIFICATE_ARN}

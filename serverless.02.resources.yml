@@ -24,6 +24,7 @@ resources:
       IsPro: !Equals ["${self:provider.stage}", pro]
       IsDev: !Not [Condition: IsPro]
   - ${file(resources/web.resources.yml)}
+  - ${file(resources/db.resources.yml)}
   - ${file(resources/users.resources.yml)}
   - ${file(resources/dns.resources.yml)}
   - Outputs:
@@ -31,6 +32,8 @@ resources:
         Value: !GetAtt CognitoUserPool.Arn
       RedirectBucketName:
         Value: !Ref RedirectBucket
+      DynamoDBTableName:
+        Value: !Ref UrlsTable
 
 outputs:
   UserPoolId: !Ref CognitoUserPool
