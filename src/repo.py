@@ -1,5 +1,6 @@
 import boto3
 
+from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 from os import environ as env
 from collections import namedtuple
@@ -31,16 +32,8 @@ def find_by_path(path):
 
 
 def find_by_user(user):
-    result = []
-    for key in __list_bucket_keys():
-        url = find_by_path(key)
-        if url.is_owned_by(user):
-            result.append(url)
-    return {"urls": result}
-
-
-def __list_bucket_keys():
-    return (obj['Key'] for obj in s3_client.list_objects(Bucket=BUCKET_NAME)['Contents'])
+    result = table.query(KeyConditionExpression=Key('user').eq(user))
+    return {"urls": [ShortUrl(**i) for i in result['Items']]}
 
 
 def save(path, links_to, user=None):

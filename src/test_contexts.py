@@ -1,7 +1,7 @@
 from api import s3_client as s3, table as dynamodb
-from botocore.stub import Stubber
+from boto3.dynamodb.conditions import Key
+from botocore.stub import Stubber, ANY
 from contextlib import contextmanager
-from os import environ as env
 
 
 def _link_by_user(user):
@@ -11,20 +11,6 @@ def _link_by_user(user):
         'Metadata': {
             'user': user
         }
-    }
-
-
-def _link_without_user():
-    return {
-        'WebsiteRedirectLocation': 'https://www.google.com',
-        'LastModified': '2021-04-19T13:45:01+00:00'
-    }
-
-
-def _expected_key(key):
-    return {
-        'Bucket': env['BUCKET_NAME'],
-        'Key': key
     }
 
 
@@ -46,20 +32,34 @@ def url_created_successfully(with_user=False):
 
 
 @contextmanager
-def non_empty_bucket():
-    with Stubber(s3) as stubber:
-        stubber.add_response('list_objects',
-                             {
-                                 'Contents': [
-                                     {'Key': '0jY7IuW'},
-                                     {'Key': '5oPebXc'},
-                                     {'Key': 'JRauwqD'}
-                                 ]
-                             })
-        stubber.add_response('head_object', _link_by_user('user1'), _expected_key('0jY7IuW'))
-        stubber.add_response('head_object', _link_by_user('user2'), _expected_key('5oPebXc'))
-        stubber.add_response('head_object', _link_without_user(), _expected_key('JRauwqD'))
-        yield stubber
+def url_by_user(user, path, links_to):
+    with Stubber(dynamodb.meta.client) as db_stubber:
+        db_stubber.add_response('query', {
+            'Items': [
+                {
+                    'path': {"S": path},
+                    'links_to': {"S": links_to},
+                    'created_at': {"S": '2021-04-19T13:45:01+00:00'},
+                    'user': {"S": user}
+                }
+            ]
+        }, expected_params={
+            'KeyConditionExpression': Key('user').eq(user),
+            'TableName': ANY
+        })
+        yield db_stubber
+
+
+@contextmanager
+def no_urls_by_user(user):
+    with Stubber(dynamodb.meta.client) as db_stubber:
+        db_stubber.add_response('query', {
+            'Items': []
+        }, expected_params={
+            'KeyConditionExpression': Key('user').eq(user),
+            'TableName': ANY
+        })
+        yield db_stubber
 
 
 @contextmanager
