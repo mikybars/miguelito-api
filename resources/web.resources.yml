@@ -6,6 +6,14 @@ Resources:
       AccessControl: PublicRead
       WebsiteConfiguration:
         IndexDocument: index.html
+  WebBucket:
+    Type: AWS::S3::Bucket
+    Condition: IsPro
+    Properties:
+      BucketName: "${self:custom.rootDomain}-web"
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     Condition: IsPro
@@ -15,9 +23,13 @@ Resources:
         Origins:
           - Id: RedirectBucketOrigin
             DomainName: !Select [1, !Split ["://", !GetAtt RedirectBucket.WebsiteURL]]
-            OriginPath: /index.html
             CustomOriginConfig:
-              OriginProtocolPolicy: https-only
+              OriginProtocolPolicy: http-only
+          - Id: WebBucketOrigin
+            DomainName: !Select [1, !Split ["://", !GetAtt WebBucket.WebsiteURL]]
+            OriginPath: /dist
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
         CustomErrorResponses:
           - ErrorCode: '404'
             ResponsePagePath: "/404.html"
@@ -25,9 +37,29 @@ Resources:
             ErrorCachingMinTTL: '30'
         Aliases:
           - ${self:custom.rootDomain}
+        DefaultRootObject: index.html
         ViewerCertificate:
           AcmCertificateArn: ${self:custom.certificateArn}
           SslSupportMethod: sni-only
+        CacheBehaviors:
+          - PathPattern: '*.html'
+            TargetOriginId: WebBucketOrigin
+            ViewerProtocolPolicy: 'redirect-to-https'
+            DefaultTTL: 30
+            ForwardedValues:
+              QueryString: false
+          - PathPattern: '*.css'
+            TargetOriginId: WebBucketOrigin
+            ViewerProtocolPolicy: 'redirect-to-https'
+            DefaultTTL: 30
+            ForwardedValues:
+              QueryString: false
+          - PathPattern: '*.js'
+            TargetOriginId: WebBucketOrigin
+            ViewerProtocolPolicy: 'redirect-to-https'
+            DefaultTTL: 30
+            ForwardedValues:
+              QueryString: false
         DefaultCacheBehavior:
           TargetOriginId: RedirectBucketOrigin
           ViewerProtocolPolicy: 'redirect-to-https'
