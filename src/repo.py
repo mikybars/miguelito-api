@@ -6,8 +6,7 @@ from os import environ as env
 from collections import namedtuple
 from datetime import datetime
 
-BUCKET_NAME = env['BUCKET_NAME']
-s3_client = boto3.client('s3')
+bucket = boto3.resource('s3').Bucket(env['BUCKET_NAME'])
 table = boto3.resource('dynamodb').Table(env['TABLE_NAME'])
 
 ShortUrl = namedtuple("ShortUrlBase", ["path", "links_to", "created_at", "user"])
@@ -19,7 +18,7 @@ class PathAndUserNotFound(Exception):
 
 def is_taken(path):
     try:
-        s3_client.head_object(Bucket=BUCKET_NAME, Key=path)
+        bucket.Object(path).load()
         return True
     except ClientError as ex:
         if ex.response['Error']['Code'] == '404':
@@ -34,14 +33,11 @@ def find_by_user(user):
 
 def save(path, links_to, user=None):
     new_url = ShortUrl(path, links_to, str(datetime.now()), user)
-    obj = {
-        'Bucket': BUCKET_NAME,
-        'Key': path,
-        'WebsiteRedirectLocation': links_to
-    }
+
+    bucket.Object(new_url.path).put(WebsiteRedirectLocation=new_url.links_to)
     if user is not None:
         table.put_item(Item=new_url._asdict())
-    s3_client.put_object(**obj)
+
     return new_url
 
 
@@ -51,7 +47,7 @@ def delete(path, user):
             Key={'user': user, 'path': path},
             ConditionExpression=Attr('user').exists()
         )
-        s3_client.delete_object(Bucket=BUCKET_NAME, Key=path)
+        bucket.Object(path).delete()
     except ClientError as ex:
         if ex.response['Error']['Code'] == 'ConditionalCheckFailedException':
             raise PathAndUserNotFound
