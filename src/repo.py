@@ -5,6 +5,7 @@ from botocore.exceptions import ClientError
 from os import environ as env
 from collections import namedtuple
 from datetime import datetime
+from typing import Dict, List
 
 bucket = boto3.resource('s3').Bucket(env['BUCKET_NAME'])
 table = boto3.resource('dynamodb').Table(env['TABLE_NAME'])
@@ -26,12 +27,12 @@ def is_taken(path):
         raise ex
 
 
-def find_by_user(user):
+def find_by_user(user) -> Dict[str, List[ShortUrl]]:
     result = table.query(KeyConditionExpression=Key('user').eq(user))
     return {"urls": [ShortUrl(**i) for i in result['Items']]}
 
 
-def save(path, links_to, user=None):
+def save(path, links_to, user=None) -> ShortUrl:
     new_url = ShortUrl(path, links_to, str(datetime.now()), user)
 
     bucket.Object(new_url.path).put(WebsiteRedirectLocation=new_url.links_to)
@@ -41,7 +42,7 @@ def save(path, links_to, user=None):
     return new_url
 
 
-def delete(path, user):
+def delete(path, user) -> None:
     try:
         table.delete_item(
             Key={'user': user, 'path': path},
