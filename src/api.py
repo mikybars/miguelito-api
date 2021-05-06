@@ -9,6 +9,7 @@ from os import environ as env
 from random import choice
 
 from src.validators import url as is_valid_url
+from src.repo import PathAndUserNotFound
 from src.repo import s3_client, table  # noqa: F401 (for testing)
 
 
@@ -70,8 +71,7 @@ def list_urls(event, context):
 def delete_url(event, context):
     path, user = event.values()
 
-    url = repo.find_by_path(path)
-    if not url or not url.is_owned_by(user):
+    try:
+        repo.delete(path=path, user=user)
+    except PathAndUserNotFound:
         raise Exception('forbidden')
-
-    repo.delete(url)

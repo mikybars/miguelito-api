@@ -1,6 +1,6 @@
 import boto3
 
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 from os import environ as env
 from collections import namedtuple
@@ -10,12 +10,11 @@ BUCKET_NAME = env['BUCKET_NAME']
 s3_client = boto3.client('s3')
 table = boto3.resource('dynamodb').Table(env['TABLE_NAME'])
 
-ShortUrlBase = namedtuple("ShortUrlBase", ["path", "links_to", "created_at", "user"])
+ShortUrl = namedtuple("ShortUrlBase", ["path", "links_to", "created_at", "user"])
 
 
-class ShortUrl(ShortUrlBase):
-    def is_owned_by(self, user):
-        return self.user == user
+class PathAndUserNotFound(Exception):
+    pass
 
 
 def is_taken(path):
@@ -46,5 +45,14 @@ def save(path, links_to, user=None):
     return new_url
 
 
-def delete(url):
-    s3_client.delete_object(Bucket=BUCKET_NAME, Key=url.path)
+def delete(path, user):
+    try:
+        table.delete_item(
+            Key={'user': user, 'path': path},
+            ConditionExpression=Attr('user').exists()
+        )
+        s3_client.delete_object(Bucket=BUCKET_NAME, Key=path)
+    except ClientError as ex:
+        if ex.response['Error']['Code'] == 'ConditionalCheckFailedException':
+            raise PathAndUserNotFound
+        raise ex

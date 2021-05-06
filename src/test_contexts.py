@@ -4,16 +4,6 @@ from botocore.stub import Stubber, ANY
 from contextlib import contextmanager
 
 
-def _link_by_user(user):
-    return {
-        'WebsiteRedirectLocation': f'{user}_link',
-        'LastModified': '2021-04-19T13:45:01+00:00',
-        'Metadata': {
-            'user': user
-        }
-    }
-
-
 @contextmanager
 def url_already_existing():
     with Stubber(s3) as stubber:
@@ -63,15 +53,7 @@ def no_urls_by_user(user):
 
 
 @contextmanager
-def url_owned_by_user(user):
-    with Stubber(s3) as stubber:
-        stubber.add_response('head_object', _link_by_user(user))
-        stubber.add_response('delete_object', {})
-        yield stubber
-
-
-@contextmanager
-def url_not_found():
-    with Stubber(s3) as stubber:
-        stubber.add_client_error('head_object', service_error_code='404')
-        yield stubber
+def delete_path_not_found():
+    with Stubber(dynamodb.meta.client) as db_stubber:
+        db_stubber.add_client_error('delete_item', service_error_code='ConditionalCheckFailedException')
+        yield db_stubber

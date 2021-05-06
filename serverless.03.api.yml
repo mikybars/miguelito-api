@@ -42,6 +42,7 @@ provider:
         - Effect: "Allow"
           Action:
             - "dynamodb:PutItem"
+            - "dynamodb:DeleteItem"
             - "dynamodb:Query"
           Resource: "arn:aws:dynamodb:*:*:table/${self:custom.tableName}"
 
