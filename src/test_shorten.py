@@ -1,6 +1,6 @@
 import api
 import pytest
-from test_contexts import url_already_existing, url_created_successfully
+from test_contexts import path_already_taken, url_created_successfully
 
 
 def body(**kwargs):
@@ -64,7 +64,7 @@ class TestShorten:
         assert 'URL' in str(excinfo.value)
 
     def test_custom_path_already_in_use_is_rejected(self):
-        with url_already_existing(), pytest.raises(Exception) as excinfo:
-            event = body(url='https://www.google.com/', custom_path='custom', user='user1')
+        with path_already_taken('taken'), pytest.raises(Exception) as excinfo:
+            event = body(url='https://www.google.com/', custom_path='taken', user='user1')
             handle(event)
         assert 'Path' in str(excinfo.value)
