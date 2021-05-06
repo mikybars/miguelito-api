@@ -21,7 +21,7 @@ handler.setFormatter(logging.Formatter('[%(levelname)-8s] %(message)s'))
 
 def generate_path(len):
     new_path = ''.join(choice(list(chain(string.ascii_letters, string.digits))) for c in range(len))
-    if repo.find_by_path(new_path):
+    if repo.is_taken(new_path):
         return generate_path(len)
     return new_path
 
@@ -39,7 +39,7 @@ def validate_custom_path(path):
     if not re.match(path_format, path):
         raise Exception(f"Path does not match regex {path_format}")
 
-    if repo.find_by_path(path):
+    if repo.is_taken(path):
         raise Exception("Path is already in use")
 
 

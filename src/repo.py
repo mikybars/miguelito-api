@@ -18,16 +18,13 @@ class ShortUrl(ShortUrlBase):
         return self.user == user
 
 
-def find_by_path(path):
+def is_taken(path):
     try:
-        response = s3_client.head_object(Bucket=BUCKET_NAME, Key=path)
-        links_to = response.get('WebsiteRedirectLocation')
-        created_at = response.get('LastModified')
-        owner = response.get('Metadata', {}).get('user')
-        return ShortUrl(path, links_to, str(created_at), owner)
+        s3_client.head_object(Bucket=BUCKET_NAME, Key=path)
+        return True
     except ClientError as ex:
         if ex.response['Error']['Code'] == '404':
-            return None
+            return False
         raise ex
 
 
