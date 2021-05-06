@@ -2,7 +2,7 @@ Resources:
   UrlsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: Urls2
+      TableName: Urls-${self:provider.stage}
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
