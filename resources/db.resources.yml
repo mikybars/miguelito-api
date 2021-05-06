@@ -1,0 +1,18 @@
+Resources: 
+  UrlsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Urls-${self:provider.stage}
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      AttributeDefinitions:
+        - AttributeName: user
+          AttributeType: S
+        - AttributeName: path
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user
+          KeyType: HASH
+        - AttributeName: path
+          KeyType: RANGE

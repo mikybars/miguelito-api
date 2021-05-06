@@ -5,10 +5,12 @@
 	help venv run clean
 .DEFAULT_GOAL := help
 
-BUCKET_NAME := migueli.to
-MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-MKFILE_DIR  := $(dir $(MKFILE_PATH))
-STAGE       := dev
+SERVERLESS_ORG := mperezi
+BUCKET_NAME    := migueli.to
+TABLE_NAME     := Url2
+MKFILE_PATH    := $(abspath $(lastword $(MAKEFILE_LIST)))
+MKFILE_DIR     := $(dir $(MKFILE_PATH))
+STAGE          := dev
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z0-9_ -]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -29,11 +31,11 @@ lint:                ## Enforce linting rules through flake8
 
 unit-test: venv      ## Run unit tests (in virtual env)
 	. venv/bin/activate
-	PYTHONPATH=$(MKFILE_DIR) BUCKET_NAME=$(BUCKET_NAME) \
+	PYTHONPATH=$(MKFILE_DIR) BUCKET_NAME=$(BUCKET_NAME) TABLE_NAME=$(TABLE_NAME) \
 			   pytest --cov --cov-report html --cov-report term
 
 integration-test:    ## Run integration tests via Serverless Framework
-	sls test --config serverless.03.api.yml --stage dev
+	sls test --config serverless.03.api.yml --stage dev --org $(SERVERLESS_ORG)
 
 # Example: make url=https://www.google.com path=google run
 run:            ## Invoke the Lambda function with the given params

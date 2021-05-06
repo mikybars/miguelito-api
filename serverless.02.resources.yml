@@ -1,4 +1,3 @@
-org: mperezi
 app: url-shortener
 service: ${self:app}-resources
 
@@ -24,15 +23,19 @@ resources:
       IsPro: !Equals ["${self:provider.stage}", pro]
       IsDev: !Not [Condition: IsPro]
   - ${file(resources/web.resources.yml)}
+  - ${file(resources/db.resources.yml)}
   - ${file(resources/users.resources.yml)}
   - ${file(resources/dns.resources.yml)}
   - Outputs:
       UserPoolArn:
         Value: !GetAtt CognitoUserPool.Arn
+      UserPoolId:
+        Value: !Ref CognitoUserPool
+      UserPoolClientId:
+        Value: !Ref CognitoUserPoolClient
+      UserPoolDomain:
+        Value: !If [IsPro, !Ref CognitoUserPoolDomain, !Ref CognitoUserPoolDomainPrefix]
       RedirectBucketName:
         Value: !Ref RedirectBucket
-
-outputs:
-  UserPoolId: !Ref CognitoUserPool
-  UserPoolClientId: !Ref CognitoUserPoolClient
-  UserPoolDomain: !If [IsPro, !Ref CognitoUserPoolDomain, !Ref CognitoUserPoolDomainPrefix]
+      DynamoDBTableName:
+        Value: !Ref UrlsTable  

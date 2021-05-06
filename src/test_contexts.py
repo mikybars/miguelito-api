@@ -1,75 +1,81 @@
-from api import s3_client as s3
-from botocore.stub import Stubber
 from contextlib import contextmanager
-from os import environ as env
 
+from boto3.dynamodb.conditions import Key
+from botocore.stub import Stubber, ANY
 
-def _link_by_user(user):
-    return {
-        'WebsiteRedirectLocation': f'{user}_link',
-        'LastModified': '2021-04-19T13:45:01+00:00',
-        'Metadata': {
-            'user': user
-        }
-    }
+from api import repo
 
-
-def _link_without_user():
-    return {
-        'WebsiteRedirectLocation': 'https://www.google.com',
-        'LastModified': '2021-04-19T13:45:01+00:00'
-    }
-
-
-def _expected_key(key):
-    return {
-        'Bucket': env['BUCKET_NAME'],
-        'Key': key
-    }
+s3 = repo.bucket.meta.client
+dynamodb = repo.table.meta.client
 
 
 @contextmanager
-def url_already_existing():
-    with Stubber(s3) as stubber:
-        stubber.add_response('head_object', {})
-        yield stubber
+def path_already_taken(path):
+    with Stubber(s3) as s3_stubber:
+        s3_stubber.add_response(
+            'head_object',
+            {},
+            expected_params={
+                'Key': path,
+                'Bucket': ANY
+            })
+        yield s3_stubber
 
 
 @contextmanager
-def url_created_successfully():
-    with Stubber(s3) as stubber:
-        stubber.add_client_error('head_object', service_error_code='404')
-        stubber.add_response('put_object', {})
-        yield stubber
+def url_created_successfully(with_user=False):
+    with Stubber(s3) as s3_stubber, Stubber(dynamodb) as db_stubber:
+        s3_stubber.add_client_error('head_object', service_error_code='404')
+        s3_stubber.add_response('put_object', {})
+        if with_user:
+            db_stubber.add_response('put_item', {})
+        yield s3_stubber, db_stubber
 
 
 @contextmanager
-def non_empty_bucket():
-    with Stubber(s3) as stubber:
-        stubber.add_response('list_objects',
-                             {
-                                 'Contents': [
-                                     {'Key': '0jY7IuW'},
-                                     {'Key': '5oPebXc'},
-                                     {'Key': 'JRauwqD'}
-                                 ]
-                             })
-        stubber.add_response('head_object', _link_by_user('user1'), _expected_key('0jY7IuW'))
-        stubber.add_response('head_object', _link_by_user('user2'), _expected_key('5oPebXc'))
-        stubber.add_response('head_object', _link_without_user(), _expected_key('JRauwqD'))
-        yield stubber
+def url_found_for_user(user, path, links_to):
+    with Stubber(dynamodb) as db_stubber:
+        db_stubber.add_response(
+            'query',
+            {
+                'Items': [
+                    {
+                        'path': {"S": path},
+                        'links_to': {"S": links_to},
+                        'created_at': {"S": '2021-04-19T13:45:01+00:00'},
+                        'user': {"S": user}
+                    }
+                ]
+            },
+            expected_params={
+                'KeyConditionExpression': Key('user').eq(user),
+                'TableName': ANY
+            })
+        yield db_stubber
 
 
 @contextmanager
-def url_owned_by_user(user):
-    with Stubber(s3) as stubber:
-        stubber.add_response('head_object', _link_by_user(user))
-        stubber.add_response('delete_object', {})
-        yield stubber
+def no_urls_found_for_user(user):
+    with Stubber(dynamodb) as db_stubber:
+        db_stubber.add_response(
+            'query',
+            {'Items': []},
+            expected_params={
+                'KeyConditionExpression': Key('user').eq(user),
+                'TableName': ANY
+            })
+        yield db_stubber
 
 
 @contextmanager
-def url_not_found():
-    with Stubber(s3) as stubber:
-        stubber.add_client_error('head_object', service_error_code='404')
-        yield stubber
+def delete_path_not_found(path, user):
+    with Stubber(dynamodb) as db_stubber:
+        db_stubber.add_client_error(
+            'delete_item',
+            service_error_code='ConditionalCheckFailedException',
+            expected_params={
+                'Key': {'path': path, 'user': user},
+                'ConditionExpression': ANY,
+                'TableName': ANY
+            })
+        yield db_stubber

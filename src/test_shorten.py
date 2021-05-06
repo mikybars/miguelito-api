@@ -1,6 +1,7 @@
-import api
 import pytest
-from test_contexts import url_already_existing, url_created_successfully
+
+import api
+from test_contexts import path_already_taken, url_created_successfully
 
 
 def body(**kwargs):
@@ -30,7 +31,7 @@ class TestShorten:
             assert resp.links_to == 'https://www.google.com'
 
     def test_custom_path_ok(self):
-        with url_created_successfully():
+        with url_created_successfully(with_user=True):
             event = body(url='https://www.google.com/', custom_path='custom', user='user1')
 
             resp = handle(event)
@@ -38,7 +39,7 @@ class TestShorten:
             assert resp.path == 'custom'
 
     def test_blank_custom_path_gets_a_random_url(self):
-        with url_created_successfully():
+        with url_created_successfully(with_user=True):
             event = body(url='https://www.google.com/', custom_path='  ', user='user1')
 
             resp = handle(event)
@@ -64,7 +65,7 @@ class TestShorten:
         assert 'URL' in str(excinfo.value)
 
     def test_custom_path_already_in_use_is_rejected(self):
-        with url_already_existing(), pytest.raises(Exception) as excinfo:
-            event = body(url='https://www.google.com/', custom_path='custom', user='user1')
+        with path_already_taken('taken'), pytest.raises(Exception) as excinfo:
+            event = body(url='https://www.google.com/', custom_path='taken', user='user1')
             handle(event)
         assert 'Path' in str(excinfo.value)

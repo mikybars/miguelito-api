@@ -1,5 +1,5 @@
 import api
-from test_contexts import non_empty_bucket
+from test_contexts import url_found_for_user, no_urls_found_for_user
 
 
 def body(**kwargs):
@@ -12,19 +12,20 @@ def handle(event):
 
 class TestGetUrls:
     def test_only_urls_by_user1_are_reported(self):
-        with non_empty_bucket():
+        with url_found_for_user('user1', path='0jY7IuW', links_to='https://www.google.com'):
             event = body(user='user1')
 
             resp = handle(event)
 
             assert 'urls' in resp
             assert len(resp['urls']) == 1
-            assert resp['urls'][0].owner == 'user1'
-            assert resp['urls'][0].links_to == 'user1_link'
+            assert resp['urls'][0].user == 'user1'
+            assert resp['urls'][0].path == '0jY7IuW'
+            assert resp['urls'][0].links_to == 'https://www.google.com'
 
     def test_user_without_urls_gets_empty_list(self):
-        with non_empty_bucket():
-            event = body(user='user3')
+        with no_urls_found_for_user('user2'):
+            event = body(user='user2')
 
             resp = handle(event)
 
