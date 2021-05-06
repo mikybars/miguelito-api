@@ -1,4 +1,3 @@
-# org: mperezi
 app: url-shortener
 service: ${self:app}-api
 

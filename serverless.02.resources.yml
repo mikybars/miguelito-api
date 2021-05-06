@@ -1,4 +1,3 @@
-org: mperezi
 app: url-shortener
 service: ${self:app}-resources
 
@@ -30,12 +29,13 @@ resources:
   - Outputs:
       UserPoolArn:
         Value: !GetAtt CognitoUserPool.Arn
+      UserPoolId:
+        Value: !Ref CognitoUserPool
+      UserPoolClientId:
+        Value: !Ref CognitoUserPoolClient
+      UserPoolDomain:
+        Value: !If [IsPro, !Ref CognitoUserPoolDomain, !Ref CognitoUserPoolDomainPrefix]
       RedirectBucketName:
         Value: !Ref RedirectBucket
       DynamoDBTableName:
-        Value: !Ref UrlsTable
-
-outputs:
-  UserPoolId: !Ref CognitoUserPool
-  UserPoolClientId: !Ref CognitoUserPoolClient
-  UserPoolDomain: !If [IsPro, !Ref CognitoUserPoolDomain, !Ref CognitoUserPoolDomainPrefix]
+        Value: !Ref UrlsTable  
