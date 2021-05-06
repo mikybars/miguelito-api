@@ -1,5 +1,6 @@
-import api
 import pytest
+
+import api
 from test_contexts import path_already_taken, url_created_successfully
 
 

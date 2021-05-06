@@ -1,13 +1,11 @@
 import logging
 import re
 import string
-
-import src.repo as repo
-
 from itertools import chain
 from os import environ as env
 from random import choice
 
+import src.repo as repo
 from src.validators import url as is_valid_url
 
 

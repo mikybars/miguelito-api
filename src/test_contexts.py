@@ -1,7 +1,9 @@
-from api import repo
+from contextlib import contextmanager
+
 from boto3.dynamodb.conditions import Key
 from botocore.stub import Stubber, ANY
-from contextlib import contextmanager
+
+from api import repo
 
 s3 = repo.bucket.meta.client
 dynamodb = repo.table.meta.client

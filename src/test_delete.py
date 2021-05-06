@@ -1,5 +1,6 @@
-import api
 import pytest
+
+import api
 from test_contexts import delete_path_not_found
 
 
