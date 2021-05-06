@@ -1,19 +1,22 @@
-from api import bucket, table
+from api import repo
 from boto3.dynamodb.conditions import Key
 from botocore.stub import Stubber, ANY
 from contextlib import contextmanager
 
+s3 = repo.bucket.meta.client
+dynamodb = repo.table.meta.client
+
 
 @contextmanager
 def url_already_existing():
-    with Stubber(bucket.meta.client) as stubber:
+    with Stubber(s3) as stubber:
         stubber.add_response('head_object', {})
         yield stubber
 
 
 @contextmanager
 def url_created_successfully(with_user=False):
-    with Stubber(bucket.meta.client) as s3_stubber, Stubber(table.meta.client) as db_stubber:
+    with Stubber(s3) as s3_stubber, Stubber(dynamodb) as db_stubber:
         s3_stubber.add_client_error('head_object', service_error_code='404')
         s3_stubber.add_response('put_object', {})
         if with_user:
@@ -23,7 +26,7 @@ def url_created_successfully(with_user=False):
 
 @contextmanager
 def url_by_user(user, path, links_to):
-    with Stubber(table.meta.client) as db_stubber:
+    with Stubber(dynamodb) as db_stubber:
         db_stubber.add_response('query', {
             'Items': [
                 {
@@ -42,7 +45,7 @@ def url_by_user(user, path, links_to):
 
 @contextmanager
 def no_urls_by_user(user):
-    with Stubber(table.meta.client) as db_stubber:
+    with Stubber(dynamodb) as db_stubber:
         db_stubber.add_response('query', {
             'Items': []
         }, expected_params={
@@ -54,6 +57,6 @@ def no_urls_by_user(user):
 
 @contextmanager
 def delete_path_not_found():
-    with Stubber(table.meta.client) as db_stubber:
+    with Stubber(dynamodb) as db_stubber:
         db_stubber.add_client_error('delete_item', service_error_code='ConditionalCheckFailedException')
         yield db_stubber

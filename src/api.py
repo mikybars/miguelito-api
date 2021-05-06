@@ -9,8 +9,6 @@ from os import environ as env
 from random import choice
 
 from src.validators import url as is_valid_url
-from src.repo import PathAndUserNotFound
-from src.repo import bucket, table  # noqa: F401 (for testing)
 
 
 LOGLEVEL = env.get('LOGLEVEL', 'WARN').upper()
@@ -73,5 +71,5 @@ def delete_url(event, context):
 
     try:
         repo.delete(path=path, user=user)
-    except PathAndUserNotFound:
+    except repo.PathAndUserNotFound:
         raise Exception('forbidden')
