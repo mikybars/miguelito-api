@@ -14,8 +14,8 @@ Resources:
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:  [ code ]
       AllowedOAuthScopes: [ openid ]
-      CallbackURLs: [ http://localhost:8080 ]
-      LogoutURLs:   [ http://localhost:8080/logout.html ]
+      CallbackURLs: [ http://localhost:8080/ ]
+      LogoutURLs:   [ http://localhost:8080/ ]
       SupportedIdentityProviders: [ Google ]
   CognitoUserPoolIdentityProvider:
     Type: AWS::Cognito::UserPoolIdentityProvider
