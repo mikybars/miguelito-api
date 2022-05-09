@@ -1,7 +1,7 @@
 - name: shorten endpoint ok
   endpoint:
     method: POST
-    path: /shorten
+    path: /public/urls
   request:
     body:
       url: https://www.google.com
@@ -13,7 +13,7 @@
 - name: unauthenticated users are not allowed custom paths
   endpoint:
     method: POST
-    path: /shorten
+    path: /public/urls
   request:
     body:
       url: https://www.google.com
@@ -24,7 +24,7 @@
 - name: unauthenticated users are not allowed custom paths
   endpoint:
     method: POST
-    path: /shorten
+    path: /public/urls
   request:
     headers:
       Content-Type: application/x-www-form-urlencoded
@@ -37,7 +37,7 @@
 - name: unauthenticated users are not allowed custom paths
   endpoint:
     method: POST
-    path: /shorten-custom
+    path: /urls
   request:
     body:
       url: https://www.google.com

@@ -23,12 +23,12 @@ provider:
     shouldStartNameWithService: true
     request:
       schemas:
-        shorten-model:
-          name: Shorten
-          schema: ${file(models/shorten.schema.json)}
-        shorten-custom-model:
-          name: ShortenCustom
-          schema: ${file(models/shorten-custom.schema.json)}
+        create-url-public-model:
+          name: CreateUrlPublic
+          schema: ${file(models/create-url-public.schema.json)}
+        create-url-model:
+          name: CreateUrl
+          schema: ${file(models/create-url.schema.json)}
   iam:
     role:
       statements:
@@ -71,13 +71,13 @@ functions:
     handler: src/api.shorten_url
     events:
       - http:
-          path: /shorten
+          path: /public/urls
           integration: lambda
           method: post
           cors: true
           request:
             schemas:
-              application/json: shorten-model
+              application/json: create-url-model
             template:
               application/x-www-form-urlencoded: null
               application/json: '{ "url" : "$input.path("$.url")" }'
@@ -93,13 +93,13 @@ functions:
                 pattern: 'An error occurred.*when calling.*'
                 template: '{ "message": "$input.path("$.errorMessage")" }'
       - http:
-          path: /shorten-custom
+          path: /urls
           integration: lambda
           method: post
           cors: true
           request:
             schemas:
-              application/json: shorten-custom-model
+              application/json: create-url-model
             template:
               application/x-www-form-urlencoded: null
               application/json: '{

@@ -1,12 +1,12 @@
 {
 	"info": {
 		"_postman_id": "77e03b2e-1131-44c2-98a1-dc50fa66db0b",
-		"name": "api",
+		"name": "miguelito api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "shorten",
+			"name": "Shorten URL (public)",
 			"event": [
 				{
 					"listen": "test",
@@ -26,7 +26,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"url\": \"https://www.google.com\"\n}",
+					"raw": "{\n    \"url\": \"https://reddit.com\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -34,19 +34,20 @@
 					}
 				},
 				"url": {
-					"raw": "{{apiUrl}}/shorten",
+					"raw": "{{baseUrl}}/public/urls",
 					"host": [
-						"{{apiUrl}}"
+						"{{baseUrl}}"
 					],
 					"path": [
-						"shorten"
+						"public",
+						"urls"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "shorten-custom",
+			"name": "Shorten URL",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -72,7 +73,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"url\": \"https://www.google.com\",\n    \"custom_path\": \"asdfasd\"\n}",
+					"raw": "{\n    \"url\": \"https://www.google.com\",\n    \"custom_path\": \"google\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -80,49 +81,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{apiUrl}}/shorten-custom",
+					"raw": "{{baseUrl}}/urls",
 					"host": [
-						"{{apiUrl}}"
-					],
-					"path": [
-						"shorten-custom"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "urls",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"auth": {
-					"type": "noauth"
-				},
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{apiUrl}}/urls",
-					"host": [
-						"{{apiUrl}}"
+						"{{baseUrl}}"
 					],
 					"path": [
 						"urls"
@@ -132,7 +93,44 @@
 			"response": []
 		},
 		{
-			"name": "delete",
+			"name": "List my URLs",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/urls",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"urls"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete URL",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -163,9 +161,9 @@
 					}
 				],
 				"url": {
-					"raw": "{{apiUrl}}/urls/:path",
+					"raw": "{{baseUrl}}/urls/:path",
 					"host": [
-						"{{apiUrl}}"
+						"{{baseUrl}}"
 					],
 					"path": [
 						"urls",
@@ -186,6 +184,16 @@
 		"type": "oauth2",
 		"oauth2": [
 			{
+				"key": "redirect_uri",
+				"value": "http://localhost:8080/",
+				"type": "string"
+			},
+			{
+				"key": "useBrowser",
+				"value": false,
+				"type": "boolean"
+			},
+			{
 				"key": "tokenName",
 				"value": "Cognito",
 				"type": "string"
@@ -198,11 +206,6 @@
 			{
 				"key": "scope",
 				"value": "openid",
-				"type": "string"
-			},
-			{
-				"key": "redirect_uri",
-				"value": "http://localhost:8080",
 				"type": "string"
 			},
 			{
