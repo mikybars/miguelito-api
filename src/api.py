@@ -43,7 +43,6 @@ def validate_custom_path(path):
 def shorten_url(event, context):
     if 'custom_path' in event:
         url, path, user = [v.strip() for v in event.values()]
-        iter
     else:
         url, = [v.strip() for v in event.values()]
         path = None

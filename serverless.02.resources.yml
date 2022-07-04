@@ -16,7 +16,7 @@ provider:
 custom:
   rootDomain: ${cf:${self:app}-dns.RootDomain}
   certificateArn: ${env:CERTIFICATE_ARN}
- 
+
 
 resources:
   - Conditions:
@@ -38,4 +38,4 @@ resources:
       RedirectBucketName:
         Value: !Ref RedirectBucket
       DynamoDBTableName:
-        Value: !Ref UrlsTable  
+        Value: !Ref UrlsTable
