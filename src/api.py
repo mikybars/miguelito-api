@@ -70,3 +70,15 @@ def delete_url(event, context):
         repo.delete(path=path, user=user)
     except repo.PathAndUserNotFound:
         raise Exception('forbidden')
+
+
+def edit_url(event, context):
+    path, user, data = event.values()
+    if 'path' in data:
+        validate_custom_path(data['path'])
+    if 'origin' in data:
+        validate_url(data['origin'])
+    try:
+        repo.update(path=path, user=user, data=data)
+    except repo.PathAndUserNotFound:
+        raise Exception('forbidden')

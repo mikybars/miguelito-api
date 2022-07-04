@@ -29,6 +29,9 @@ provider:
         create-url-model:
           name: CreateUrl
           schema: ${file(models/create-url.schema.json)}
+        edit-url-model:
+          name: EditUrl
+          schema: ${file(models/edit-url.schema.json)}
   iam:
     role:
       statements:
@@ -40,6 +43,7 @@ provider:
           Resource: "arn:aws:s3:::${self:custom.bucketName}/*"
         - Effect: "Allow"
           Action:
+            - "dynamodb:GetItem"
             - "dynamodb:PutItem"
             - "dynamodb:DeleteItem"
             - "dynamodb:Query"
@@ -167,6 +171,42 @@ functions:
               200:
                 pattern: ''
                 template: '{}'
+              403:
+                pattern: 'forbidden'
+                template: '{}'
+              500:
+                pattern: 'An error occurred.*when calling.*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'
+          authorizer:
+            name: CognitoAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: "${cf:${self:app}-resources-${self:custom.stack}.UserPoolArn}"
+  edit:
+    handler: src/api.edit_url
+    events:
+      - http:
+          path: /urls/{path}
+          integration: lambda
+          method: patch
+          cors: true
+          request:
+            schemas:
+              application/json: edit-url-model
+            template:
+              application/x-www-form-urlencoded: null
+              application/json: '{
+                "path": "$input.params().path.get("path")",
+                "user": "$context.authorizer.claims.email",
+                "data": $input.json("$")
+              }'
+            passThrough: NEVER
+          response:
+            statusCodes:
+              200:
+                pattern: ''
+              400:
+                pattern: '(Path|URL).*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'
               403:
                 pattern: 'forbidden'
                 template: '{}'
