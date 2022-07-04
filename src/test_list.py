@@ -19,9 +19,9 @@ class TestGetUrls:
 
             assert 'urls' in resp
             assert len(resp['urls']) == 1
-            assert resp['urls'][0].user == 'user1'
-            assert resp['urls'][0].path == '0jY7IuW'
-            assert resp['urls'][0].links_to == 'https://www.google.com'
+            assert resp['urls'][0]['user'] == 'user1'
+            assert resp['urls'][0]['path'] == '0jY7IuW'
+            assert resp['urls'][0]['links_to'] == 'https://www.google.com'
 
     def test_user_without_urls_gets_empty_list(self):
         with no_urls_found_for_user('user2'):
