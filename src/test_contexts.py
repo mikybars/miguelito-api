@@ -79,3 +79,16 @@ def delete_path_not_found(path, user):
                 'TableName': ANY
             })
         yield db_stubber
+
+
+@contextmanager
+def edit_path_not_found(path, user):
+    with Stubber(dynamodb) as db_stubber:
+        db_stubber.add_response(
+            'get_item',
+            {},
+            expected_params={
+                'Key': {'path': path, 'user': user},
+                'TableName': ANY
+            })
+        yield db_stubber
