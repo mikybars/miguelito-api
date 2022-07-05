@@ -12,7 +12,15 @@ Resources:
         - AttributeName: path
           AttributeType: S
       KeySchema:
-        - AttributeName: user
-          KeyType: HASH
         - AttributeName: path
-          KeyType: RANGE
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: User-index
+          KeySchema:
+            - AttributeName: user
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1

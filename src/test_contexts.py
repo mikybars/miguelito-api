@@ -11,24 +11,24 @@ dynamodb = repo.table.meta.client
 
 @contextmanager
 def path_already_taken(path):
-    with Stubber(s3) as s3_stubber:
-        s3_stubber.add_response(
-            'head_object',
-            {},
-            expected_params={
-                'Key': path,
-                'Bucket': ANY
-            })
-        yield s3_stubber
+    with Stubber(dynamodb) as db_stubber:
+        db_stubber.add_client_error('put_item', service_error_code='ConditionalCheckFailedException')
+        yield db_stubber
 
 
 @contextmanager
-def url_created_successfully(with_user=False):
+def url_created_successfully():
     with Stubber(s3) as s3_stubber, Stubber(dynamodb) as db_stubber:
         s3_stubber.add_client_error('head_object', service_error_code='404')
         s3_stubber.add_response('put_object', {})
-        if with_user:
-            db_stubber.add_response('put_item', {})
+        yield s3_stubber, db_stubber
+
+
+@contextmanager
+def custom_url_created_successfully():
+    with Stubber(s3) as s3_stubber, Stubber(dynamodb) as db_stubber:
+        db_stubber.add_response('put_item', {})
+        s3_stubber.add_response('put_object', {})
         yield s3_stubber, db_stubber
 
 
@@ -48,6 +48,7 @@ def url_found_for_user(user, path, links_to):
                 ]
             },
             expected_params={
+                'IndexName': 'User-index',
                 'KeyConditionExpression': Key('user').eq(user),
                 'TableName': ANY
             })
@@ -61,6 +62,7 @@ def no_urls_found_for_user(user):
             'query',
             {'Items': []},
             expected_params={
+                'IndexName': 'User-index',
                 'KeyConditionExpression': Key('user').eq(user),
                 'TableName': ANY
             })
@@ -74,7 +76,7 @@ def delete_path_not_found(path, user):
             'delete_item',
             service_error_code='ConditionalCheckFailedException',
             expected_params={
-                'Key': {'path': path, 'user': user},
+                'Key': {'path': path},
                 'ConditionExpression': ANY,
                 'TableName': ANY
             })
@@ -88,7 +90,7 @@ def edit_path_not_found(path, user):
             'get_item',
             {},
             expected_params={
-                'Key': {'path': path, 'user': user},
+                'Key': {'path': path},
                 'TableName': ANY
             })
         yield db_stubber

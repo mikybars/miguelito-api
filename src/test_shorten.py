@@ -1,11 +1,16 @@
 import pytest
 
 import api
-from test_contexts import path_already_taken, url_created_successfully
+from test_contexts import path_already_taken, url_created_successfully, custom_url_created_successfully
 
 
 def body(**kwargs):
-    return dict(**kwargs)
+    data = dict(**kwargs)
+    if 'user' in data:
+        user = data.pop('user')
+        return {'data': data, 'user': user}
+    else:
+        return {'data': data}
 
 
 def handle(event):
@@ -19,8 +24,8 @@ class TestShorten:
 
             resp = handle(event)
 
-            assert resp.path.isalnum()
-            assert resp.links_to == 'https://www.google.com'
+            assert resp['path'].isalnum()
+            assert resp['links_to'] == 'https://www.google.com'
 
     def test_domain_name_without_trailing_slash_ok(self):
         with url_created_successfully():
@@ -28,23 +33,15 @@ class TestShorten:
 
             resp = handle(event)
 
-            assert resp.links_to == 'https://www.google.com'
+            assert resp['links_to'] == 'https://www.google.com'
 
     def test_custom_path_ok(self):
-        with url_created_successfully(with_user=True):
+        with custom_url_created_successfully():
             event = body(url='https://www.google.com/', custom_path='custom', user='user1')
 
             resp = handle(event)
 
-            assert resp.path == 'custom'
-
-    def test_blank_custom_path_gets_a_random_url(self):
-        with url_created_successfully(with_user=True):
-            event = body(url='https://www.google.com/', custom_path='  ', user='user1')
-
-            resp = handle(event)
-
-            assert resp.path.isalnum()
+            assert resp['path'] == 'custom'
 
     def test_invalid_url_is_rejected(self):
         with pytest.raises(Exception) as excinfo:

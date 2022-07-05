@@ -48,6 +48,10 @@ provider:
             - "dynamodb:DeleteItem"
             - "dynamodb:Query"
           Resource: "arn:aws:dynamodb:*:*:table/${self:custom.tableName}"
+        - Effect: "Allow"
+          Action:
+            - "dynamodb:Query"
+          Resource: "arn:aws:dynamodb:*:*:table/${self:custom.tableName}/index/User-index"
 
 custom:
   stacks:
@@ -68,6 +72,7 @@ package:
     - '!**/*'
     - src/api.py
     - src/repo.py
+    - src/shorturl.py
     - src/validators.py
 
 functions:
@@ -107,8 +112,7 @@ functions:
             template:
               application/x-www-form-urlencoded: null
               application/json: '{
-                "url" : "$input.path("$.url")",
-                "custom_path" : "$input.path("$.custom_path")",
+                "data": $input.json("$"),
                 "user": "$context.authorizer.claims.email"
               }'
             passThrough: NEVER

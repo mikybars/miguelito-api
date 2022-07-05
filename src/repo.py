@@ -1,29 +1,22 @@
 import boto3
 
+from src.shorturl import ShortUrl
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 from os import environ as env
-from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Dict, List
+
 
 bucket = boto3.resource('s3').Bucket(env['BUCKET_NAME'])
 table = boto3.resource('dynamodb').Table(env['TABLE_NAME'])
 
 
-@dataclass
-class ShortUrl:
-    path: str
-    links_to: str
-    created_at: str
-    updated_at: str = None
-    user: str = None
-
-    def asdict(self):
-        return asdict(self, dict_factory=lambda x: {k: v for (k, v) in x if v is not None})
+class DuplicateKey(Exception):
+    pass
 
 
-class PathAndUserNotFound(Exception):
+class KeyNotFound(Exception):
     pass
 
 
@@ -37,50 +30,73 @@ def is_taken(path):
         raise ex
 
 
-def find_by_user(user) -> Dict[str, List[ShortUrl]]:
-    result = table.query(KeyConditionExpression=Key('user').eq(user))
-    return {"urls": [ShortUrl(**i).asdict() for i in result['Items']]}
+def find_by_user(user: str) -> List[ShortUrl]:
+    result = table.query(
+        IndexName='User-index',
+        KeyConditionExpression=Key('user').eq(user),
+    )
+    return [ShortUrl(**i) for i in result['Items']]
 
 
-def save(path, links_to, user=None) -> ShortUrl:
-    new_url = ShortUrl(path=path, links_to=links_to, created_at=str(datetime.now()), user=user)
+def save(new_url: ShortUrl) -> ShortUrl:
+    try:
+        if new_url.user is not None:
+            table.put_item(
+                Item=new_url.asdict(),
+                ConditionExpression=Attr('user').not_exists()
+            )
+        bucket.Object(new_url.path).put(WebsiteRedirectLocation=new_url.links_to)
+        return new_url
+    except ClientError as ex:
+        if ex.response['Error']['Code'] == 'ConditionalCheckFailedException':
+            raise DuplicateKey
+        raise ex
 
-    bucket.Object(new_url.path).put(WebsiteRedirectLocation=new_url.links_to)
-    if user is not None:
-        table.put_item(Item=new_url.asdict())
 
-    return new_url
-
-
-def delete(path, user) -> None:
+def delete(path: str, user: str) -> None:
     try:
         table.delete_item(
-            Key={'user': user, 'path': path},
-            ConditionExpression=Attr('user').exists()
+            Key={
+                'path': path
+            },
+            ConditionExpression=Attr('user').eq(user)
         )
         bucket.Object(path).delete()
     except ClientError as ex:
         if ex.response['Error']['Code'] == 'ConditionalCheckFailedException':
-            raise PathAndUserNotFound
+            raise KeyNotFound
         raise ex
 
 
-def get(path, user) -> ShortUrl:
+def update(path: str, user: str, data: Dict) -> ShortUrl:
+    updated_url = get(path)
+    if updated_url.user != user:
+        raise KeyNotFound
+    try:
+        if 'path' in data:
+            updated_url.path = data['path']
+        if 'origin' in data:
+            updated_url.links_to = data['origin']
+        updated_url.updated_at = str(datetime.now())
+        table.put_item(
+            Item=updated_url.asdict()
+        )
+        if 'path' in data:
+            delete(path, user)
+        if 'origin' in data:
+            bucket.Object(updated_url.path).put(WebsiteRedirectLocation=updated_url.links_to)
+        return updated_url
+    except ClientError as ex:
+        if ex.response['Error']['Code'] == 'ConditionalCheckFailedException':
+            raise DuplicateKey
+
+
+def get(path: str) -> ShortUrl:
     i = table.get_item(
-        Key={'user': user, 'path': path}
+        Key={
+            'path': path
+        }
     )
     if 'Item' not in i:
-        raise PathAndUserNotFound
+        raise KeyNotFound
     return ShortUrl(**(i['Item']))
-
-
-def update(path, user, data):
-    updated_url = get(path, user)
-    if 'path' in data:
-        delete(path, user)
-        updated_url.path = data['path']
-    if 'origin' in data:
-        updated_url.links_to = data['origin']
-        bucket.Object(updated_url.path).put(WebsiteRedirectLocation=updated_url.links_to)
-    updated_url.updated_at = str(datetime.now())
-    table.put_item(Item=updated_url.asdict())
