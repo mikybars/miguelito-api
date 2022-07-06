@@ -79,7 +79,8 @@ def update(path: str, user: str, data: Dict) -> ShortUrl:
             updated_url.links_to = data['origin']
         updated_url.updated_at = str(datetime.now())
         table.put_item(
-            Item=updated_url.asdict()
+            Item=updated_url.asdict(),
+            ConditionExpression=Attr('user').not_exists()
         )
         if 'path' in data:
             delete(path, user)
