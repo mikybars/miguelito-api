@@ -1,10 +1,8 @@
 app: url-shortener
 service: ${self:app}-resources
 
-frameworkVersion: '2'
+frameworkVersion: '3'
 useDotenv: true
-unresolvedVariablesNotificationMode: error
-variablesResolutionMode: 20210326
 disabledDeprecations:
   - LAMBDA_HASHING_VERSION_V2
 

@@ -43,24 +43,24 @@ run:            ## Invoke the Lambda function with the given params
 		sls invoke -f shorten
 
 deploy-01-dns:    ## Create hosted zone and API custom domain name in AWS
-	sls deploy -v --config serverless.01.dns.yml
+	sls deploy --verbose --config serverless.01.dns.yml
 	sls create_domain --config serverless.01.dns.yml
 
 deploy-02-resources:    ## Create resources stack in AWS
-	sls deploy -v --config serverless.02.resources.yml --stage $(STAGE)
+	sls deploy --verbose --config serverless.02.resources.yml --stage $(STAGE)
 
 deploy-03-api:    ## Create API and functions in AWS
-	sls deploy -v --config serverless.03.api.yml --stage $(STAGE)
+	sls deploy --verbose --config serverless.03.api.yml --stage $(STAGE)
 
 undeploy-01-dns:    ## Remove hosted zone and API custom domain name from AWS
 	sls delete_domain --config serverless.01.dns.yml
 	sls remove --config serverless.01.dns.yml
 
 undeploy-02-resources:    ## Remove resources from AWS
-	sls remove -v --config serverless.02.resources.yml --stage $(STAGE)
+	sls remove --verbose --config serverless.02.resources.yml --stage $(STAGE)
 
 undeploy-03-api:    ## Remove API and functions from AWS
-	sls remove -v --config serverless.03.api.yml --stage $(STAGE)
+	sls remove --verbose --config serverless.03.api.yml --stage $(STAGE)
 
 clean:          ## Delete temporary files and build artifacts
 	rm -rf venv .serverless .pytest_cache
