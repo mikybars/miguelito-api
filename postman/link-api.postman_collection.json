@@ -1,12 +1,13 @@
 {
 	"info": {
 		"_postman_id": "77e03b2e-1131-44c2-98a1-dc50fa66db0b",
-		"name": "miguelito api",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"name": "Link API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "9513392"
 	},
 	"item": [
 		{
-			"name": "Shorten URL (public)",
+			"name": "Create link (random)",
 			"event": [
 				{
 					"listen": "test",
@@ -26,7 +27,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"url\": \"https://reddit.com\"\n}",
+					"raw": "{\n    \"origin\": \"https://reddit.com\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -34,20 +35,20 @@
 					}
 				},
 				"url": {
-					"raw": "{{baseUrl}}/public/urls",
+					"raw": "{{baseUrl}}/public/links",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"public",
-						"urls"
+						"links"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "Shorten URL",
+			"name": "Create link with custom backhalf",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -73,7 +74,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"url\": \"https://www.google.com\",\n    \"custom_path\": \"google\"\n}",
+					"raw": "{\n    \"origin\": \"https://www.google.com\",\n    \"backhalf\": \"google\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -81,19 +82,19 @@
 					}
 				},
 				"url": {
-					"raw": "{{baseUrl}}/urls",
+					"raw": "{{baseUrl}}/links",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
-						"urls"
+						"links"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "List my URLs",
+			"name": "List my links",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -118,19 +119,19 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{baseUrl}}/urls",
+					"raw": "{{baseUrl}}/links",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
-						"urls"
+						"links"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "Delete URL",
+			"name": "Delete link",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -161,18 +162,72 @@
 					}
 				],
 				"url": {
-					"raw": "{{baseUrl}}/urls/:path",
+					"raw": "{{baseUrl}}/links/:backhalf",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
-						"urls",
-						":path"
+						"links",
+						":backhalf"
 					],
 					"variable": [
 						{
-							"key": "path",
-							"value": "invalid-path"
+							"key": "backhalf",
+							"value": "google"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Edit link",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"origin\": \"https://www.serverless.com/\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/links/:backhalf",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"links",
+						":backhalf"
+					],
+					"variable": [
+						{
+							"key": "backhalf",
+							"value": "n3SZI5e"
 						}
 					]
 				}

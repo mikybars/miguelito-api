@@ -1,12 +1,12 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "edit-url",
-  "description": "Edit URL request model",
+  "title": "edit-link",
+  "description": "Edit link request model",
   "type": "object",
   "properties": {
-    "path": {
+    "backhalf": {
       "type": "string",
-      "description": "The new path"
+      "description": "The new backhalf"
     },
     "origin": {
       "type": "string",

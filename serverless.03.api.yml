@@ -21,15 +21,15 @@ provider:
     shouldStartNameWithService: true
     request:
       schemas:
-        create-url-public-model:
-          name: CreateUrlPublic
-          schema: ${file(models/create-url-public.schema.json)}
-        create-url-model:
-          name: CreateUrl
-          schema: ${file(models/create-url.schema.json)}
-        edit-url-model:
-          name: EditUrl
-          schema: ${file(models/edit-url.schema.json)}
+        create-link-public-model:
+          name: CreateLinkPublic
+          schema: ${file(models/create-link-public.schema.json)}
+        create-link-model:
+          name: CreateLink
+          schema: ${file(models/create-link.schema.json)}
+        edit-link-model:
+          name: EditLink
+          schema: ${file(models/edit-link.schema.json)}
   iam:
     role:
       statements:
@@ -70,43 +70,44 @@ package:
     - '!**/*'
     - src/api.py
     - src/repo.py
-    - src/shorturl.py
+    - src/link.py
     - src/validators.py
 
 functions:
-  shorten:
-    handler: src/api.shorten_url
+  create:
+    handler: src/api.create_link
+    description: Create a new link pointing to the URL provided
     events:
       - http:
-          path: /public/urls
+          path: /public/links
           integration: lambda
           method: post
           cors: true
           request:
             schemas:
-              application/json: create-url-model
+              application/json: create-link-public-model
             template:
               application/x-www-form-urlencoded: null
-              application/json: '{ "url" : "$input.path("$.url")" }'
+              application/json: '{ "data": $input.json("$") }'
             passThrough: NEVER
           response:
             statusCodes:
-              200:
+              201:
                 pattern: ''
               400:
-                pattern: '(Path|URL).*'
+                pattern: 'error:.*'
                 template: '{ "message": "$input.path("$.errorMessage")" }'
               500:
                 pattern: 'An error occurred.*when calling.*'
                 template: '{ "message": "$input.path("$.errorMessage")" }'
       - http:
-          path: /urls
+          path: /links
           integration: lambda
           method: post
           cors: true
           request:
             schemas:
-              application/json: create-url-model
+              application/json: create-link-model
             template:
               application/x-www-form-urlencoded: null
               application/json: '{
@@ -116,10 +117,10 @@ functions:
             passThrough: NEVER
           response:
             statusCodes:
-              200:
+              201:
                 pattern: ''
               400:
-                pattern: '(Path|URL).*'
+                pattern: '(Backhalf|URL).*'
                 template: '{ "message": "$input.path("$.errorMessage")" }'
               500:
                 pattern: 'An error occurred.*when calling.*'
@@ -129,11 +130,11 @@ functions:
             type: COGNITO_USER_POOLS
             arn: "${cf:${self:app}-resources-${self:custom.stack}.UserPoolArn}"
   list:
-    handler: src/api.list_urls
-    description: List the URLs created by the current user
+    handler: src/api.list_links
+    description: List the links owned by the current user
     events:
       - http:
-          path: /urls
+          path: /links
           integration: lambda
           method: get
           cors: true
@@ -153,11 +154,11 @@ functions:
             type: COGNITO_USER_POOLS
             arn: "${cf:${self:app}-resources-${self:custom.stack}.UserPoolArn}"
   delete:
-    handler: src/api.delete_url
-    description: Delete the specified URL if created by the current user
+    handler: src/api.delete_link
+    description: Delete the link identified by its backhalf only if owned by the current user
     events:
       - http:
-          path: /urls/{path}
+          path: /links/{backhalf}
           integration: lambda
           method: delete
           cors: true
@@ -165,17 +166,16 @@ functions:
             template:
               application/x-www-form-urlencoded: null
               application/json: '{
-                "path": "$input.params().path.get("path")",
+                "backhalf": "$input.params().path.get("backhalf")",
                 "user": "$context.authorizer.claims.email"
               }'
           response:
             statusCodes:
-              200:
+              204:
                 pattern: ''
-                template: '{}'
               403:
                 pattern: 'forbidden'
-                template: '{}'
+                template: '{ "message": "this link cannot be deleted" }'
               500:
                 pattern: 'An error occurred.*when calling.*'
                 template: '{ "message": "$input.path("$.errorMessage")" }'
@@ -184,20 +184,21 @@ functions:
             type: COGNITO_USER_POOLS
             arn: "${cf:${self:app}-resources-${self:custom.stack}.UserPoolArn}"
   edit:
-    handler: src/api.edit_url
+    handler: src/api.edit_link
+    description: Edit the link identified by its backhalf only if owned by the current user
     events:
       - http:
-          path: /urls/{path}
+          path: /links/{backhalf}
           integration: lambda
           method: patch
           cors: true
           request:
             schemas:
-              application/json: edit-url-model
+              application/json: edit-link-model
             template:
               application/x-www-form-urlencoded: null
               application/json: '{
-                "path": "$input.params().path.get("path")",
+                "backhalf": "$input.params().path.get("backhalf")",
                 "user": "$context.authorizer.claims.email",
                 "data": $input.json("$")
               }'
@@ -207,11 +208,11 @@ functions:
               200:
                 pattern: ''
               400:
-                pattern: '(Path|URL).*'
+                pattern: '(Backhalf|URL).*'
                 template: '{ "message": "$input.path("$.errorMessage")" }'
               403:
                 pattern: 'forbidden'
-                template: '{}'
+                template: ''
               500:
                 pattern: 'An error occurred.*when calling.*'
                 template: '{ "message": "$input.path("$.errorMessage")" }'

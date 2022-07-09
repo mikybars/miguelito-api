@@ -1,18 +1,18 @@
 Resources:
-  UrlsTable:
+  LinksTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: Urls-${self:provider.stage}
+      TableName: Links-${self:provider.stage}
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
       AttributeDefinitions:
         - AttributeName: user
           AttributeType: S
-        - AttributeName: path
+        - AttributeName: backhalf
           AttributeType: S
       KeySchema:
-        - AttributeName: path
+        - AttributeName: backhalf
           KeyType: HASH
       GlobalSecondaryIndexes:
         - IndexName: User-index

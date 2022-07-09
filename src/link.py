@@ -1,0 +1,61 @@
+import re
+import string
+import src.repo as repo
+
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from itertools import chain
+from random import choice
+from src.validators import url as is_valid_url
+
+
+# https://stackoverflow.com/a/54489602
+@dataclass
+class Link:
+    def getbackhalf(self):
+        return self.__dict__.get("backhalf")
+
+    def setbackhalf(self, value):
+        if type(value) == property or value is None:
+            self.__dict__["backhalf"] = new_random_backhalf(len=7)
+        else:
+            validate_backhalf(value)
+            self.__dict__["backhalf"] = value
+
+    def getorigin(self):
+        return self.__dict__.get("origin")
+
+    def setorigin(self, value):
+        if type(value) == property or value is None:
+            raise ValueError("origin cannot be None")
+        validate_url(value)
+        self.__dict__["origin"] = value
+
+    backhalf: str = property(getbackhalf, setbackhalf)
+    origin: str = property(getorigin, setorigin)
+    created_at: str = str(datetime.now())
+    updated_at: str = None
+    user: str = None
+
+    def asdict(self):
+        return asdict(self, dict_factory=lambda x: {k: v for (k, v) in x if v is not None})
+
+    del getbackhalf, setbackhalf, getorigin, setorigin
+
+
+def new_random_backhalf(len):
+    while True:
+        new_backhalf = ''.join(choice(list(chain(string.ascii_letters, string.digits))) for c in range(len))
+        if not repo.is_taken(new_backhalf):
+            return new_backhalf
+
+
+def validate_backhalf(value):
+    format = "^[A-Za-z0-9_-]*$"
+    if not re.match(format, value):
+        raise ValueError(f"Backhalf does not match regex {format}")
+
+
+def validate_url(value):
+    if not is_valid_url(value):
+        raise ValueError("Origin URL is invalid")

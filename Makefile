@@ -37,11 +37,6 @@ unit-test: venv      ## Run unit tests (in virtual env)
 integration-test:    ## Run integration tests via Serverless Framework
 	sls test --config serverless.03.api.yml --stage dev --org $(SERVERLESS_ORG)
 
-# Example: make url=https://www.google.com path=google run
-run:            ## Invoke the Lambda function with the given params
-	sls generate-event -t aws:apiGateway -b '{"url":"$(url)", "custom_path": "$(path)"}' | \
-		sls invoke -f shorten
-
 deploy-01-dns:    ## Create hosted zone and API custom domain name in AWS
 	sls deploy --verbose --config serverless.01.dns.yml
 	sls create_domain --config serverless.01.dns.yml

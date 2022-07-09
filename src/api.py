@@ -1,13 +1,8 @@
 import logging
-import re
-import string
 import src.repo as repo
-from itertools import chain
-from os import environ as env
-from random import choice
 
-from src.shorturl import ShortUrl
-from src.validators import url as is_valid_url
+from os import environ as env
+from src.link import Link
 
 
 LOGLEVEL = env.get('LOGLEVEL', 'WARN').upper()
@@ -17,30 +12,27 @@ root_logger.setLevel(LOGLEVEL)
 handler.setFormatter(logging.Formatter('[%(levelname)-8s] %(message)s'))
 
 
-def shorten_url(event, context):
+def create_link(event, context):
     data = {
-        'user': event.get('user'),
-        'path': event['data'].get('custom_path'),
-        'links_to': event['data']['url'],
+        'origin': event['data']['origin'],
+        'backhalf': event['data'].get('backhalf'),
+        'user': event.get('user')
     }
     try:
-        u = ShortUrl(**data)
-        print(u)
+        u = Link(**data)
         return repo.save(u).asdict()
-    except ValueError as ex:
-        raise Exception(str(ex))
     except repo.DuplicateKey:
-        raise Exception('Path is already taken')
+        raise Exception('Backhalf is already taken')
 
 
-def list_urls(event, context):
-    return {"urls": [u.asdict() for u in repo.find_by_user(event['user'])]}
+def list_links(event, context):
+    return {"data": [u.asdict() for u in repo.find_by_user(event['user'])]}
 
 
-def delete_url(event, context):
+def delete_link(event, context):
     data = {
         'user': event['user'],
-        'path': event['path'],
+        'backhalf': event['backhalf'],
     }
     try:
         repo.delete(**data)
@@ -48,11 +40,11 @@ def delete_url(event, context):
         raise Exception('forbidden')
 
 
-def edit_url(event, context):
-    path, user, data = event.values()
+def edit_link(event, context):
+    backhalf, user, data = event.values()
     try:
-        return repo.update(path=path, user=user, data=data).asdict()
+        return repo.update(backhalf=backhalf, user=user, data=data).asdict()
     except repo.KeyNotFound:
         raise Exception('forbidden')
     except repo.DuplicateKey:
-        raise Exception('Path is already taken')
+        raise Exception('Backhalf is already taken')

@@ -36,4 +36,4 @@ resources:
       RedirectBucketName:
         Value: !Ref RedirectBucket
       DynamoDBTableName:
-        Value: !Ref UrlsTable
+        Value: !Ref LinksTable

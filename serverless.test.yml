@@ -1,60 +1,60 @@
 - name: shorten endpoint ok
   endpoint:
     method: POST
-    path: /public/urls
+    path: /public/links
   request:
     body:
-      url: https://www.google.com
+      origin: https://www.google.com
   response:
     status: 200
     body:
-      links_to: https://www.google.com
+      origin: https://www.google.com
 
 - name: unauthenticated users are not allowed custom paths
   endpoint:
     method: POST
-    path: /public/urls
+    path: /public/links
   request:
     body:
-      url: https://www.google.com
-      custom_path: custom
+      origin: https://www.google.com
+      backhalf: custom
   response:
     status: 400
 
 - name: unauthenticated users are not allowed custom paths
   endpoint:
     method: POST
-    path: /public/urls
+    path: /public/links
   request:
     headers:
       Content-Type: application/x-www-form-urlencoded
     body:
-      url: https://www.google.com
-      custom_path: custom
+      origin: https://www.google.com
+      backhalf: custom
   response:
     status: 415
 
 - name: unauthenticated users are not allowed custom paths
   endpoint:
     method: POST
-    path: /urls
+    path: /links
   request:
     body:
-      url: https://www.google.com
-      custom_path: custom
+      origin: https://www.google.com
+      backhalf: custom
   response:
     status: 401
 
 - name: unauthenticated users are not allowed to invoke list
   endpoint:
     method: GET
-    path: /urls
+    path: /links
   response:
     status: 401
 
 - name: unauthenticated users are not allowed to invoke delete
   endpoint:
     method: DELETE
-    path: /urls/my-url
+    path: /links/my-url
   response:
     status: 401
