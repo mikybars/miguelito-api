@@ -38,13 +38,14 @@ def find_by_user(user: str) -> List[Link]:
     return [Link(**i) for i in result['Items']]
 
 
-def save(new_link: Link) -> Link:
+def save(new_link: Link, overwrite=False) -> Link:
     try:
-        if new_link.user is not None:
-            table.put_item(
-                Item=new_link.asdict(),
-                ConditionExpression=Attr('user').not_exists()
-            )
+        params = {
+            'Item': new_link.asdict()
+        }
+        if not overwrite:
+            params['ConditionExpression'] = Attr('origin').not_exists()
+        table.put_item(**params)
         bucket.Object(new_link.backhalf).put(WebsiteRedirectLocation=new_link.origin)
         return new_link
     except ClientError as ex:
@@ -68,6 +69,18 @@ def delete(backhalf: str, user: str) -> None:
         raise ex
 
 
+def delete_all_by_user(user: str) -> None:
+    scan = table.scan(FilterExpression=Attr("user").eq(user))
+    with table.batch_writer() as batch:
+        for each in scan['Items']:
+            batch.delete_item(
+                Key={
+                    'backhalf': each['backhalf']
+                }
+            )
+            bucket.Object(each['backhalf']).delete()
+
+
 def update(backhalf: str, user: str, data: Dict) -> Link:
     updated_link = get(backhalf)
     if updated_link.user != user:
@@ -78,14 +91,11 @@ def update(backhalf: str, user: str, data: Dict) -> Link:
         if 'origin' in data:
             updated_link.origin = data['origin']
         updated_link.updated_at = str(datetime.now())
-        table.put_item(
-            Item=updated_link.asdict(),
-            ConditionExpression=Attr('user').not_exists()
-        )
+
+        save(updated_link, overwrite=('backhalf' not in data))
+
         if 'backhalf' in data:
             delete(backhalf, user)
-        if 'origin' in data:
-            bucket.Object(updated_link.backhalf).put(WebsiteRedirectLocation=updated_link.origin)
         return updated_link
     except ClientError as ex:
         if ex.response['Error']['Code'] == 'ConditionalCheckFailedException':

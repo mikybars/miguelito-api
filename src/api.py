@@ -22,7 +22,7 @@ def create_link(event, context):
         u = Link(**data)
         return repo.save(u).asdict()
     except repo.DuplicateKey:
-        raise Exception('Backhalf is already taken')
+        raise ApplicationError('Backhalf is already taken')
 
 
 def list_links(event, context):
@@ -37,7 +37,11 @@ def delete_link(event, context):
     try:
         repo.delete(**data)
     except repo.KeyNotFound:
-        raise Exception('forbidden')
+        raise AuthorizationError('forbidden')
+
+
+def delete_all(event, context):
+    repo.delete_all_by_user(event['user'])
 
 
 def edit_link(event, context):
@@ -45,6 +49,16 @@ def edit_link(event, context):
     try:
         return repo.update(backhalf=backhalf, user=user, data=data).asdict()
     except repo.KeyNotFound:
-        raise Exception('forbidden')
+        raise AuthorizationError('forbidden')
     except repo.DuplicateKey:
-        raise Exception('Backhalf is already taken')
+        raise ApplicationError('Backhalf is already taken')
+
+
+class ApplicationError(Exception):
+    def __init__(self, message):
+        super().__init__(f'(ApplicationError) {message}')
+
+
+class AuthorizationError(Exception):
+    def __init__(self, message):
+        super().__init__(f'(AuthorizationError) {message}')

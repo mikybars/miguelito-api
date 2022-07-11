@@ -1,6 +1,0 @@
-[run]
-source = src
-omit = src/test_*, src/validators.py
-
-[report]
-fail_under = 80

@@ -27,7 +27,7 @@ class Link:
 
     def setorigin(self, value):
         if type(value) == property or value is None:
-            raise ValueError("origin cannot be None")
+            raise ValidationError("origin cannot be None")
         validate_url(value)
         self.__dict__["origin"] = value
 
@@ -53,9 +53,14 @@ def new_random_backhalf(len):
 def validate_backhalf(value):
     format = "^[A-Za-z0-9_-]*$"
     if not re.match(format, value):
-        raise ValueError(f"Backhalf does not match regex {format}")
+        raise ValidationError(f"Backhalf does not match regex {format}")
 
 
 def validate_url(value):
     if not is_valid_url(value):
-        raise ValueError("Origin URL is invalid")
+        raise ValidationError("Origin URL is invalid")
+
+
+class ValidationError(Exception):
+    def __init__(self, message):
+        super().__init__(f'(ValidationError) {message}')

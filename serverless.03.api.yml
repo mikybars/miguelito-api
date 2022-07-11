@@ -45,6 +45,8 @@ provider:
             - "dynamodb:PutItem"
             - "dynamodb:DeleteItem"
             - "dynamodb:Query"
+            - "dynamodb:Scan"
+            - "dynamodb:BatchWriteItem"
           Resource: "arn:aws:dynamodb:*:*:table/${self:custom.tableName}"
         - Effect: "Allow"
           Action:
@@ -95,7 +97,7 @@ functions:
               201:
                 pattern: ''
               400:
-                pattern: 'error:.*'
+                pattern: '.*ValidationError.*'
                 template: '{ "message": "$input.path("$.errorMessage")" }'
               500:
                 pattern: 'An error occurred.*when calling.*'
@@ -120,7 +122,7 @@ functions:
               201:
                 pattern: ''
               400:
-                pattern: '(Backhalf|URL).*'
+                pattern: '.*(ValidationError|ApplicationError).*'
                 template: '{ "message": "$input.path("$.errorMessage")" }'
               500:
                 pattern: 'An error occurred.*when calling.*'
@@ -174,8 +176,34 @@ functions:
               204:
                 pattern: ''
               403:
-                pattern: 'forbidden'
-                template: '{ "message": "this link cannot be deleted" }'
+                pattern: '.*AuthorizationError.*'
+                template: '{ "message": "this link cannot be deleted by this user" }'
+              500:
+                pattern: 'An error occurred.*when calling.*'
+                template: '{ "message": "$input.path("$.errorMessage")" }'
+          authorizer:
+            name: CognitoAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: "${cf:${self:app}-resources-${self:custom.stack}.UserPoolArn}"
+  deleteAll:
+    handler: src/api.delete_all
+    description: Delete all the links owned by the current user
+    events:
+      - http:
+          path: /links
+          integration: lambda
+          method: delete
+          cors: true
+          request:
+            template:
+              application/x-www-form-urlencoded: null
+              application/json: '{
+                "user": "$context.authorizer.claims.email"
+              }'
+          response:
+            statusCodes:
+              204:
+                pattern: ''
               500:
                 pattern: 'An error occurred.*when calling.*'
                 template: '{ "message": "$input.path("$.errorMessage")" }'
@@ -208,11 +236,11 @@ functions:
               200:
                 pattern: ''
               400:
-                pattern: '(Backhalf|URL).*'
+                pattern: '.*(ValidationError|ApplicationError).*'
                 template: '{ "message": "$input.path("$.errorMessage")" }'
               403:
-                pattern: 'forbidden'
-                template: ''
+                pattern: '.*AuthorizationError.*'
+                template: '{ "message": "this link cannot be edited by this user" }'
               500:
                 pattern: 'An error occurred.*when calling.*'
                 template: '{ "message": "$input.path("$.errorMessage")" }'

@@ -7,7 +7,7 @@
 	},
 	"item": [
 		{
-			"name": "Create link (random)",
+			"name": "Create a link",
 			"event": [
 				{
 					"listen": "test",
@@ -48,7 +48,7 @@
 			"response": []
 		},
 		{
-			"name": "Create link with custom backhalf",
+			"name": "Create a custom link",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -175,6 +175,49 @@
 							"key": "backhalf",
 							"value": "google"
 						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete all my links",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/links",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"links"
 					]
 				}
 			},

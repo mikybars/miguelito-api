@@ -17,25 +17,8 @@ help:  ## Show this help
 		sort | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-# https://stackoverflow.com/a/46188210/13166837
-venv: venv/marker
-
-venv/marker: requirements.txt test-requirements.txt
-	@test -d venv || virtualenv venv
-	. venv/bin/activate
-	pip3 install $(?:%=-r %)
-	touch $@
-
 lint:                ## Enforce linting rules through flake8
 	flake8 src
-
-unit-test: venv      ## Run unit tests (in virtual env)
-	. venv/bin/activate
-	PYTHONPATH=$(MKFILE_DIR) BUCKET_NAME=$(BUCKET_NAME) TABLE_NAME=$(TABLE_NAME) \
-			   pytest --cov --cov-report html --cov-report term
-
-integration-test:    ## Run integration tests via Serverless Framework
-	sls test --config serverless.03.api.yml --stage dev --org $(SERVERLESS_ORG)
 
 deploy-01-dns:    ## Create hosted zone and API custom domain name in AWS
 	sls deploy --verbose --config serverless.01.dns.yml
@@ -58,6 +41,5 @@ undeploy-03-api:    ## Remove API and functions from AWS
 	sls remove --verbose --config serverless.03.api.yml --stage $(STAGE)
 
 clean:          ## Delete temporary files and build artifacts
-	rm -rf venv .serverless .pytest_cache
+	rm -rf .serverless
 	find . -type d -name "__pycache__" | xargs rm -rf
-	rm .coverage
