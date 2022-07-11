@@ -1,8 +1,8 @@
 .PHONY: \
-	lint unit-test integration-test \
+	lint test \
 	deploy-01-dns deploy-02-resources deploy-03-api \
 	undeploy-01-dns undeploy-02-resources undeploy-03-api \
-	help venv run clean
+	help clean
 .DEFAULT_GOAL := help
 
 SERVERLESS_ORG := mperezi
@@ -19,6 +19,12 @@ help:  ## Show this help
 
 lint:                ## Enforce linting rules through flake8
 	flake8 src
+
+test:    ## Run integration tests via Postman (newman)
+	newman run postman/integration-tests.postman_collection.json \
+		-e postman/dev.postman_environment.json \
+		-r htmlextra,cli \
+		--reporter-htmlextra-export testResults/htmlreport.html
 
 deploy-01-dns:    ## Create hosted zone and API custom domain name in AWS
 	sls deploy --verbose --config serverless.01.dns.yml
