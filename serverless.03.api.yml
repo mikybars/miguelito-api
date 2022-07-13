@@ -76,6 +76,19 @@ package:
     - src/validators.py
 
 functions:
+  info:
+    handler: src/api.get_info
+    description: Returns relevant information about this service such as the base URL
+    events:
+      - http:
+          path: /info
+          integration: lambda
+          method: get
+          cors: true
+          response:
+            statusCodes:
+              200:
+                pattern: ''
   create:
     handler: src/api.create_link
     description: Create a new link pointing to the URL provided

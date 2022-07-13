@@ -12,6 +12,12 @@ root_logger.setLevel(LOGLEVEL)
 handler.setFormatter(logging.Formatter('[%(levelname)-8s] %(message)s'))
 
 
+def get_info(event, context):
+    return {
+        "base_url": f"https://{env['BUCKET_NAME']}/"
+    }
+
+
 def create_link(event, context):
     data = {
         'origin': event['data']['origin'],
