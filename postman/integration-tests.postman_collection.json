@@ -1234,7 +1234,7 @@
 					"    }",
 					"}",
 					"",
-					"const mandatoryFields = ['origin', 'backhalf', 'created_at'];",
+					"const mandatoryFields = ['url', 'origin', 'backhalf', 'created_at'];",
 					"",
 					"testUtils = {",
 					"    assertValidLinkInResponse: function (expected, pm) {",
