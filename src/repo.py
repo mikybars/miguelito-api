@@ -46,7 +46,10 @@ def save(new_link: Link, overwrite=False) -> Link:
         if not overwrite:
             params['ConditionExpression'] = Attr('origin').not_exists()
         table.put_item(**params)
-        bucket.Object(new_link.backhalf).put(WebsiteRedirectLocation=new_link.origin)
+        bucket.Object(new_link.backhalf).put(
+                WebsiteRedirectLocation=new_link.origin,
+                ACL='public-read'
+        )
         return new_link
     except ClientError as ex:
         if ex.response['Error']['Code'] == 'ConditionalCheckFailedException':
