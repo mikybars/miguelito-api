@@ -8,6 +8,9 @@ from itertools import chain
 from random import choice
 from src.validators import url as is_valid_url
 
+BACKHALF_MIN_LEN = 1
+BACKHALF_MAX_LEN = 20
+
 
 # https://stackoverflow.com/a/54489602
 @dataclass
@@ -52,6 +55,12 @@ def new_random_backhalf(len):
 
 def validate_backhalf(value):
     format = "^[A-Za-z0-9_-]*$"
+    if len(value) < BACKHALF_MIN_LEN:
+        raise ValidationError("Backhalf too short. "
+                              f"Please provide one in the range {BACKHALF_MIN_LEN}-{BACKHALF_MAX_LEN}")
+    if len(value) > BACKHALF_MAX_LEN:
+        raise ValidationError("Backhalf too long. "
+                              f"Please provide one in the range {BACKHALF_MIN_LEN}-{BACKHALF_MAX_LEN}")
     if not re.match(format, value):
         raise ValidationError(f"Backhalf does not match regex {format}")
 

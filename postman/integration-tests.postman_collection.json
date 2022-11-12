@@ -423,6 +423,112 @@
 							"response": []
 						},
 						{
+							"name": "should fail if the backhalf is empty",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400\", function() {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"pm.test(\"Response is an error\", function() {",
+											"    testUtils.assertValidErrorResponse(/too short/i, pm);",
+											"    testUtils.assertValidErrorResponse(/range/i, pm);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"origin\": \"https://www.google.com\",\n    \"backhalf\": \"\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/links",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"links"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "should fail if the backhalf is too long",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 400\", function() {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"pm.test(\"Response is an error\", function() {",
+											"    testUtils.assertValidErrorResponse(/too long/i, pm);",
+											"    testUtils.assertValidErrorResponse(/range/i, pm);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"origin\": \"https://www.google.com\",\n    \"backhalf\": \"this-is-a-very-long-and-winding-link\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/links",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"links"
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "should fail if the link already exists",
 							"event": [
 								{
