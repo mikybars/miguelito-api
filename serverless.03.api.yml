@@ -37,6 +37,7 @@ provider:
           Action:
             - "s3:GetObject"
             - "s3:PutObject"
+            - "s3:PutObjectAcl"
             - "s3:DeleteObject"
           Resource: "arn:aws:s3:::${self:custom.bucketName}/*"
         - Effect: "Allow"
@@ -83,8 +84,8 @@ functions:
       - http:
           path: /info
           integration: lambda
-          method: get
           cors: true
+          method: get
           response:
             statusCodes:
               200:
@@ -97,7 +98,8 @@ functions:
           path: /public/links
           integration: lambda
           method: post
-          cors: true
+          cors:
+            origin: 'https://${cf:${self:app}-dns.RootDomain}'
           request:
             schemas:
               application/json: create-link-public-model
@@ -119,7 +121,8 @@ functions:
           path: /links
           integration: lambda
           method: post
-          cors: true
+          cors:
+            origin: 'https://${cf:${self:app}-dns.RootDomain}'
           request:
             schemas:
               application/json: create-link-model
@@ -152,7 +155,8 @@ functions:
           path: /links
           integration: lambda
           method: get
-          cors: true
+          cors:
+            origin: 'https://${cf:${self:app}-dns.RootDomain}'
           request:
             template:
               application/x-www-form-urlencoded: null
@@ -176,7 +180,8 @@ functions:
           path: /links/{backhalf}
           integration: lambda
           method: delete
-          cors: true
+          cors:
+            origin: 'https://${cf:${self:app}-dns.RootDomain}'
           request:
             template:
               application/x-www-form-urlencoded: null
@@ -206,7 +211,8 @@ functions:
           path: /links
           integration: lambda
           method: delete
-          cors: true
+          cors:
+            origin: 'https://${cf:${self:app}-dns.RootDomain}'
           request:
             template:
               application/x-www-form-urlencoded: null
@@ -232,7 +238,8 @@ functions:
           path: /links/{backhalf}
           integration: lambda
           method: patch
-          cors: true
+          cors:
+            origin: 'https://${cf:${self:app}-dns.RootDomain}'
           request:
             schemas:
               application/json: edit-link-model
