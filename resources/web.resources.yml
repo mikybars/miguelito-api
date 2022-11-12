@@ -1,4 +1,4 @@
-Resources: 
+Resources:
   RedirectBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -41,28 +41,36 @@ Resources:
         ViewerCertificate:
           AcmCertificateArn: ${self:custom.certificateArn}
           SslSupportMethod: sni-only
+          MinimumProtocolVersion: 'TLSv1.2_2021'
+        HttpVersion: 'http2'
         CacheBehaviors:
           - PathPattern: '*.html'
             TargetOriginId: WebBucketOrigin
+            CachePolicyId: b2884449-e4de-46a7-ac36-70bc7f1ddd6d
             ViewerProtocolPolicy: 'redirect-to-https'
-            DefaultTTL: 30
-            ForwardedValues:
-              QueryString: false
+            # Caching Optimized for uncompressed objects (AWS managed cache policy)
+            # https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html
           - PathPattern: '*.css'
             TargetOriginId: WebBucketOrigin
+            # Caching Optimized (AWS managed cache policy)
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            Compress: true
             ViewerProtocolPolicy: 'redirect-to-https'
-            DefaultTTL: 30
-            ForwardedValues:
-              QueryString: false
           - PathPattern: '*.js'
             TargetOriginId: WebBucketOrigin
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            Compress: true
             ViewerProtocolPolicy: 'redirect-to-https'
-            DefaultTTL: 30
-            ForwardedValues:
-              QueryString: false
+          - PathPattern: '*.js.map'
+            TargetOriginId: WebBucketOrigin
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            ViewerProtocolPolicy: 'redirect-to-https'
+          - PathPattern: '*.css.map'
+            TargetOriginId: WebBucketOrigin
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            ViewerProtocolPolicy: 'redirect-to-https'
         DefaultCacheBehavior:
           TargetOriginId: RedirectBucketOrigin
+          # Caching disabled (AWS managed cache policy)
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
           ViewerProtocolPolicy: 'redirect-to-https'
-          DefaultTTL: 30
-          ForwardedValues:
-            QueryString: false
