@@ -59,7 +59,13 @@ custom:
     dev: dev
     v1: pro
     v2: pro
+  cors:
+    origin:
+      dev: 'http://localhost:8080'
+      v1: 'https://${cf:${self:app}-dns.RootDomain}'
+      v2: '${self:custom.cors.origin.v1}'
   stack: ${self:custom.stacks.${self:provider.stage}}
+  corsOrigin: ${self:custom.cors.origin.${self:provider.stage}}
   bucketName: ${cf:${self:app}-resources-${self:custom.stack}.RedirectBucketName}
   tableName: ${cf:${self:app}-resources-${self:custom.stack}.DynamoDBTableName}
   customDomain:
@@ -99,7 +105,7 @@ functions:
           integration: lambda
           method: post
           cors:
-            origin: 'https://${cf:${self:app}-dns.RootDomain}'
+            origin: '${self:custom.corsOrigin}'
           request:
             schemas:
               application/json: create-link-public-model
@@ -122,7 +128,7 @@ functions:
           integration: lambda
           method: post
           cors:
-            origin: 'https://${cf:${self:app}-dns.RootDomain}'
+            origin: '${self:custom.corsOrigin}'
           request:
             schemas:
               application/json: create-link-model
@@ -156,7 +162,7 @@ functions:
           integration: lambda
           method: get
           cors:
-            origin: 'https://${cf:${self:app}-dns.RootDomain}'
+            origin: '${self:custom.corsOrigin}'
           request:
             template:
               application/x-www-form-urlencoded: null
@@ -181,7 +187,7 @@ functions:
           integration: lambda
           method: delete
           cors:
-            origin: 'https://${cf:${self:app}-dns.RootDomain}'
+            origin: '${self:custom.corsOrigin}'
           request:
             template:
               application/x-www-form-urlencoded: null
@@ -212,7 +218,7 @@ functions:
           integration: lambda
           method: delete
           cors:
-            origin: 'https://${cf:${self:app}-dns.RootDomain}'
+            origin: '${self:custom.corsOrigin}'
           request:
             template:
               application/x-www-form-urlencoded: null
@@ -239,7 +245,7 @@ functions:
           integration: lambda
           method: patch
           cors:
-            origin: 'https://${cf:${self:app}-dns.RootDomain}'
+            origin: '${self:custom.corsOrigin}'
           request:
             schemas:
               application/json: edit-link-model
