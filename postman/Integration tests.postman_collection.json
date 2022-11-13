@@ -299,7 +299,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"origin\": \"https://www.google.com\",\n    \"backhalf\": \"test-link-HMGeUdkrz238i\"\n}",
+									"raw": "{\n    \"origin\": \"https://www.google.com\",\n    \"backhalf\": \"test-link-HMGeUdkrz2\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -351,7 +351,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"origin\": \"this is not an URL\",\n    \"backhalf\": \"test-link-HMGeUdkrz238i\"\n}",
+									"raw": "{\n    \"origin\": \"this is not an URL\",\n    \"backhalf\": \"test-link-HMGeUdkrz2\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -612,7 +612,7 @@
 									"listen": "prerequest",
 									"script": {
 										"exec": [
-											"api.createCustomLink('https://www.google.com', 'test-link-HMGeUdkrz238i', pm);"
+											"api.createCustomLink('https://www.google.com', 'test-link-HMGeUdkrz2', pm);"
 										],
 										"type": "text/javascript"
 									}
@@ -635,7 +635,7 @@
 											"            .and.to.be.length(1);",
 											"    testUtils.assertValidCustomLink(response.data[0], {",
 											"        origin: 'https://www.google.com',",
-											"        backhalf: 'test-link-HMGeUdkrz238i',",
+											"        backhalf: 'test-link-HMGeUdkrz2',",
 											"        user: user",
 											"    },",
 											"    pm);",
@@ -672,7 +672,7 @@
 									"listen": "prerequest",
 									"script": {
 										"exec": [
-											"api.createCustomLink('https://wwww.google.com', 'test-link-HMGeUdkrz238i', pm);"
+											"api.createCustomLink('https://wwww.google.com', 'test-link-HMGeUdkrz2', pm);"
 										],
 										"type": "text/javascript"
 									}
@@ -710,7 +710,7 @@
 									"variable": [
 										{
 											"key": "backhalf",
-											"value": "test-link-HMGeUdkrz238i"
+											"value": "test-link-HMGeUdkrz2"
 										}
 									]
 								}
@@ -841,7 +841,7 @@
 									"listen": "prerequest",
 									"script": {
 										"exec": [
-											"api.createCustomLink('https://www.google.com', 'test-link-HMGeUdkrz238i', pm);"
+											"api.createCustomLink('https://www.google.com', 'test-link-HMGeUdkrz2', pm);"
 										],
 										"type": "text/javascript"
 									}
@@ -879,7 +879,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"backhalf\": \"test-link-Z6uxw8Q5ukac\"\n}"
+									"raw": "{\n    \"backhalf\": \"test-link-Z6uxw8Q5uk\"\n}"
 								},
 								"url": {
 									"raw": "{{baseUrl}}/links/:backhalf",
@@ -893,7 +893,7 @@
 									"variable": [
 										{
 											"key": "backhalf",
-											"value": "test-link-HMGeUdkrz238i"
+											"value": "test-link-HMGeUdkrz2"
 										}
 									]
 								}
@@ -907,7 +907,7 @@
 									"listen": "prerequest",
 									"script": {
 										"exec": [
-											"api.createCustomLink('https://www.google.com', 'test-link-HMGeUdkrz238i', pm);"
+											"api.createCustomLink('https://www.google.com', 'test-link-HMGeUdkrz2', pm);"
 										],
 										"type": "text/javascript"
 									}
@@ -924,7 +924,7 @@
 											"    const requestData = JSON.parse(request.data);",
 											"    testUtils.assertValidUpdatedLinkInResponse({",
 											"        origin: requestData.origin,",
-											"        backhalf: 'test-link-HMGeUdkrz238i',",
+											"        backhalf: 'test-link-HMGeUdkrz2',",
 											"        user: pm.variables.get('testUserEmail')",
 											"    },",
 											"    pm);",
@@ -959,7 +959,7 @@
 									"variable": [
 										{
 											"key": "backhalf",
-											"value": "test-link-HMGeUdkrz238i"
+											"value": "test-link-HMGeUdkrz2"
 										}
 									]
 								}
@@ -973,7 +973,7 @@
 									"listen": "prerequest",
 									"script": {
 										"exec": [
-											"api.createCustomLink('https://www.google.com', 'test-link-HMGeUdkrz238i', pm);"
+											"api.createCustomLink('https://www.google.com', 'test-link-HMGeUdkrz2', pm);"
 										],
 										"type": "text/javascript"
 									}
@@ -1019,7 +1019,7 @@
 									"variable": [
 										{
 											"key": "backhalf",
-											"value": "test-link-HMGeUdkrz238i"
+											"value": "test-link-HMGeUdkrz2"
 										}
 									]
 								}
@@ -1033,7 +1033,7 @@
 									"listen": "prerequest",
 									"script": {
 										"exec": [
-											"api.createCustomLink('https://www.google.com', 'test-link-HMGeUdkrz238i', pm);"
+											"api.createCustomLink('https://www.google.com', 'test-link-HMGeUdkrz2', pm);"
 										],
 										"type": "text/javascript"
 									}
@@ -1079,7 +1079,7 @@
 									"variable": [
 										{
 											"key": "backhalf",
-											"value": "test-link-HMGeUdkrz238i"
+											"value": "test-link-HMGeUdkrz2"
 										}
 									]
 								}
@@ -1214,7 +1214,7 @@
 									"script": {
 										"exec": [
 											"api.createLink('https://www.bing.com', pm);",
-											"api.createCustomLink('https://www.google.com', 'google-HMGeUdkrz238i', pm);"
+											"api.createCustomLink('https://www.google.com', 'google-HMGeUdkrz2', pm);"
 										],
 										"type": "text/javascript"
 									}
@@ -1261,7 +1261,7 @@
 									"variable": [
 										{
 											"key": "backhalf",
-											"value": "google-HMGeUdkrz238i"
+											"value": "google-HMGeUdkrz2"
 										}
 									]
 								}

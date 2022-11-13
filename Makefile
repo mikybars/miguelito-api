@@ -21,7 +21,7 @@ lint:                ## Enforce linting rules through flake8
 	flake8 src
 
 test:    ## Run integration tests via Postman (newman)
-	newman run postman/integration-tests.postman_collection.json \
+	newman run "postman/Integration tests.postman_collection.json" \
 		-e postman/dev.postman_environment.json \
 		-r htmlextra,cli \
 		--reporter-htmlextra-export testResults/htmlreport.html
