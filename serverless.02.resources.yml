@@ -3,6 +3,7 @@ service: ${self:app}-resources
 
 frameworkVersion: '3'
 useDotenv: true
+configValidationMode: error
 disabledDeprecations:
   - LAMBDA_HASHING_VERSION_V2
 
@@ -14,7 +15,9 @@ provider:
 custom:
   rootDomain: ${cf:${self:app}-dns.RootDomain}
   certificateArn: ${env:CERTIFICATE_ARN}
-
+  idTokenValidity:
+    dev: 60
+    pro: 5
 
 resources:
   - Conditions:
@@ -35,5 +38,11 @@ resources:
         Value: !If [IsPro, !Ref CognitoUserPoolDomain, !Ref CognitoUserPoolDomainPrefix]
       RedirectBucketName:
         Value: !Ref RedirectBucket
-      DynamoDBTableName:
+      LinksTable:
         Value: !Ref LinksTable
+      UsersTable:
+        Value: !Ref UsersTable
+      UniquesTable:
+        Value: !Ref UniquesTable
+      CountersTable:
+        Value: !Ref CountersTable

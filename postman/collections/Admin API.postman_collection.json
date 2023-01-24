@@ -1,140 +1,13 @@
 {
 	"info": {
-		"_postman_id": "77e03b2e-1131-44c2-98a1-dc50fa66db0b",
-		"name": "Link API",
+		"_postman_id": "18bf8477-3eb1-44c8-b219-629aaad377a6",
+		"name": "Admin API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "9513392"
 	},
 	"item": [
 		{
-			"name": "Info",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"auth": {
-					"type": "noauth"
-				},
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{baseUrl}}/info",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"info"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Create a link",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"auth": {
-					"type": "noauth"
-				},
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"origin\": \"https://reddit.com\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{baseUrl}}/public/links",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"public",
-						"links"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Create a custom link",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript"
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n    \"origin\": \"https://www.google.com\",\n    \"backhalf\": \"google\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{baseUrl}}/links",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"links"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "List my links",
+			"name": "List all links",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -159,11 +32,12 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{baseUrl}}/links",
+					"raw": "{{baseUrl}}/admin/links",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
+						"admin",
 						"links"
 					]
 				}
@@ -202,11 +76,12 @@
 					}
 				],
 				"url": {
-					"raw": "{{baseUrl}}/links/:backhalf",
+					"raw": "{{baseUrl}}/admin/links/:backhalf",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
+						"admin",
 						"links",
 						":backhalf"
 					],
@@ -221,7 +96,7 @@
 			"response": []
 		},
 		{
-			"name": "Delete all my links",
+			"name": "Delete all links",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -252,11 +127,12 @@
 					}
 				],
 				"url": {
-					"raw": "{{baseUrl}}/links",
+					"raw": "{{baseUrl}}/admin/links",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
+						"admin",
 						"links"
 					]
 				}
@@ -299,11 +175,12 @@
 					"raw": "{\n    \"origin\": \"https://www.serverless.com/\"\n}"
 				},
 				"url": {
-					"raw": "{{baseUrl}}/links/:backhalf",
+					"raw": "{{baseUrl}}/admin/links/:backhalf",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
+						"admin",
 						"links",
 						":backhalf"
 					],
@@ -321,6 +198,11 @@
 	"auth": {
 		"type": "oauth2",
 		"oauth2": [
+			{
+				"key": "client_authentication",
+				"value": "body",
+				"type": "string"
+			},
 			{
 				"key": "redirect_uri",
 				"value": "http://localhost:8080/",
@@ -364,11 +246,6 @@
 			{
 				"key": "addTokenTo",
 				"value": "header",
-				"type": "string"
-			},
-			{
-				"key": "client_authentication",
-				"value": "body",
 				"type": "string"
 			},
 			{

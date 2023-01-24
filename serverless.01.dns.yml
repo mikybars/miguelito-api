@@ -3,6 +3,7 @@ service: ${self:app}-dns
 
 frameworkVersion: '3'
 useDotenv: true
+configValidationMode: error
 disabledDeprecations:
   - LAMBDA_HASHING_VERSION_V2
 

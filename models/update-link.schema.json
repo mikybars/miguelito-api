@@ -1,8 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "edit-link",
-  "description": "Edit link request model",
+  "title": "update-link",
+  "description": "Update link request model",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "backhalf": {
       "type": "string",

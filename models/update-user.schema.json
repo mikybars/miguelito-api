@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "update-user",
+  "description": "Update user",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "role": {
+      "type": "string",
+      "description": "ADMIN or USER"
+    },
+    "status": {
+      "type": "string",
+      "description": "WAITING_APPROVAL or ACTIVE"
+    }
+  }
+}

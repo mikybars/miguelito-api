@@ -2,10 +2,6 @@
 __pycache__/
 *.py[cod]
 
-# Unit test / coverage reports
-.coverage
-htmlcov/
-
 # Environments
 .env
 venv/
