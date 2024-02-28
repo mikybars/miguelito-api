@@ -1,5 +1,5 @@
 # Integration tests
 
 ```bash
-make test
+just test
 ```

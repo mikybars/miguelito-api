@@ -32,14 +32,19 @@ lint-sls:
 lint-config stack stage:
 	sls package --config serverless*{{stack}}.yml --stage {{stage}}
 
-# Run integration tests via Postman (newman)
+# npm install -g newman newman-reporter-htmlextra
+# Run integration tests via Postman (needs newman)
 test:
 	newman run "postman/collections/Integration tests.postman_collection.json" \
 		--environment postman/env/dev.postman_environment.json \
 		--reporters htmlextra,cli \
 		--reporter-htmlextra-export testResults/htmlreport.html \
-		--env-var accessKey=${AWS_ACCESS_KEY_ID} \
-		--env-var secretAccessKey=${AWS_SECRET_ACCESS_KEY}
+		--env-var awsAccessKeyId=${AWS_ACCESS_KEY_ID} \
+		--env-var awsSecretAccessKey=${AWS_SECRET_ACCESS_KEY}
+
+# Run integration tests via Postman (needs gh)
+setup-ci:
+  gh secret set -f .env
 
 deploy stack stage:
 	#!/usr/bin/env bash

@@ -9,19 +9,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Setup just
+        uses: extractions/setup-just@v2
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
 
       - name: Install newman
-        run: |
-          npm install -g newman
-          npm install -g newman-reporter-htmlextra
+        run: npm install -g newman newman-reporter-htmlextra
 
       - name: 🧪 Run tests
         env:
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: make test
+        run: just test
 
       - name: ⬆️ Upload test report
         if: ${{ always() }}
