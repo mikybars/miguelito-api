@@ -140,8 +140,7 @@ functions:
     description: Denies access to non activated user accounts while sending request-to-join emails the first time
     events:
       - cognitoUserPool:
-          pool: migueli.to-users-pro  # not ideal
-          # pool: ${cf:${self:app}-dns.RootDomain}-users-${self:provider.stage}  # not ideal
+          pool: ${cf:${self:app}-dns.RootDomain}-users-${self:custom.stack}
           trigger: PreSignUp
           existing: true
   updateUser:
