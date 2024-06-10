@@ -3,7 +3,9 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !If [IsPro, "${self:custom.rootDomain}", "dev.${self:custom.rootDomain}"]
-      AccessControl: PublicRead
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: ObjectWriter
       WebsiteConfiguration:
         IndexDocument: index.html
   WebBucket:
@@ -11,7 +13,9 @@ Resources:
     Condition: IsPro
     Properties:
       BucketName: "${self:custom.rootDomain}-web"
-      AccessControl: PublicRead
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: ObjectWriter
       WebsiteConfiguration:
         IndexDocument: index.html
   CloudFrontDistribution:
