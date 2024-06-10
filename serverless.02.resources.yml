@@ -15,9 +15,15 @@ provider:
 custom:
   rootDomain: ${cf:${self:app}-dns.RootDomain}
   certificateArn: ${env:CERTIFICATE_ARN}
+  accessTokenValidity:
+    dev: 60
+    pro: 5
   idTokenValidity:
     dev: 60
     pro: 5
+  refreshTokenValidity:
+    dev: 600
+    pro: 60
 
 resources:
   - Conditions:

@@ -9,6 +9,7 @@ set dotenv-load
 alias t := test
 alias d := deploy
 
+[private]
 default:
 	@just --list
 
