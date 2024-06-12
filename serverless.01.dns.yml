@@ -1,11 +1,9 @@
 app: url-shortener
 service: ${self:app}-dns
 
-frameworkVersion: '3'
+frameworkVersion: '4'
 useDotenv: true
 configValidationMode: error
-disabledDeprecations:
-  - LAMBDA_HASHING_VERSION_V2
 
 provider:
   name: aws

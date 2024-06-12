@@ -11,9 +11,9 @@ Resources:
       GenerateSecret: false
       UserPoolId:
         Ref: CognitoUserPool
-      AccessTokenValidity: ${self:custom.accessTokenValidity.${self:provider.stage}}
-      IdTokenValidity: ${self:custom.idTokenValidity.${self:provider.stage}}
-      RefreshTokenValidity: ${self:custom.refreshTokenValidity.${self:provider.stage}}
+      AccessTokenValidity: ${param:accessTokenValidityInMins}
+      IdTokenValidity: ${param:idTokenValidityInMins}
+      RefreshTokenValidity: ${param:refreshTokenValidityInMins}
       ExplicitAuthFlows:
         - ALLOW_REFRESH_TOKEN_AUTH
         - ALLOW_CUSTOM_AUTH

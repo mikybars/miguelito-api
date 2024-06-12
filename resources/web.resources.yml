@@ -2,7 +2,8 @@ Resources:
   RedirectBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !If [IsPro, "${self:custom.rootDomain}", "dev.${self:custom.rootDomain}"]
+      BucketName:
+        Fn::If: [IsPro, "${self:custom.rootDomain}", "dev.${self:custom.rootDomain}"]
       OwnershipControls:
         Rules:
           - ObjectOwnership: ObjectWriter
@@ -26,11 +27,21 @@ Resources:
         Enabled: true
         Origins:
           - Id: RedirectBucketOrigin
-            DomainName: !Select [1, !Split ["://", !GetAtt RedirectBucket.WebsiteURL]]
+            DomainName:
+              Fn::Select:
+                - 1
+                - Fn::Split:
+                  - "://"
+                  - Fn::GetAtt: [ RedirectBucket, WebsiteURL ]
             CustomOriginConfig:
               OriginProtocolPolicy: http-only
           - Id: WebBucketOrigin
-            DomainName: !Select [1, !Split ["://", !GetAtt WebBucket.WebsiteURL]]
+            DomainName:
+              Fn::Select:
+                - 1
+                - Fn::Split:
+                  - "://"
+                  - Fn::GetAtt: [ WebBucket, WebsiteURL ]
             OriginPath: /dist
             CustomOriginConfig:
               OriginProtocolPolicy: http-only

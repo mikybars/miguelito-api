@@ -1,38 +1,41 @@
 app: url-shortener
 service: ${self:app}-resources
 
-frameworkVersion: '3'
+frameworkVersion: '4'
 useDotenv: true
 configValidationMode: error
-disabledDeprecations:
-  - LAMBDA_HASHING_VERSION_V2
 
 provider:
   name: aws
-  region: ${opt:region, 'eu-west-1'}
+  region: eu-west-1
   stage: ${opt:stage, 'dev'}
 
 custom:
   rootDomain: ${cf:${self:app}-dns.RootDomain}
   certificateArn: ${env:CERTIFICATE_ARN}
-  accessTokenValidity:
-    dev: 60
-    pro: 5
-  idTokenValidity:
-    dev: 60
-    pro: 5
-  refreshTokenValidity:
-    dev: 600
-    pro: 60
+
+stages:
+  dev:
+    params:
+      accessTokenValidityInMins: 60
+      idTokenValidityInMins: 60
+      refreshTokenValidityInMins: 600
+  pro:
+    params:
+      accessTokenValidityInMins: 5
+      idTokenValidityInMins: 5
+      refreshTokenValidityInMins: 60
 
 resources:
   - Conditions:
       IsPro: !Equals ["${self:provider.stage}", pro]
       IsDev: !Not [Condition: IsPro]
+
   - ${file(resources/web.resources.yml)}
   - ${file(resources/db.resources.yml)}
   - ${file(resources/users.resources.yml)}
   - ${file(resources/dns.resources.yml)}
+
   - Outputs:
       UserPoolArn:
         Value: !GetAtt CognitoUserPool.Arn

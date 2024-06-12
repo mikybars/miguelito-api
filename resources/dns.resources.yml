@@ -10,20 +10,25 @@ Resources:
           AliasTarget:
             # https://docs.aws.amazon.com/es_es/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html#cfn-route53-aliastarget-hostedzoneid
             HostedZoneId: Z2FDTNDATAQYW2
-            DNSName: !GetAtt CloudFrontDistribution.DomainName
+            DNSName:
+              Fn::GetAtt: [ CloudFrontDistribution, DomainName ]
             EvaluateTargetHealth: false
   CognitoUserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Condition: IsPro
-    DependsOn: WebsiteDNSName
-    Properties: 
-      CustomDomainConfig: 
+    DependsOn: RootDomainDNSRecord
+    Properties:
+      CustomDomainConfig:
         CertificateArn: ${self:custom.certificateArn}
       Domain: auth.${self:custom.rootDomain}
-      UserPoolId: !Ref CognitoUserPool
+      UserPoolId:
+        Ref: CognitoUserPool
   CognitoUserPoolDomainPrefix:
     Type: AWS::Cognito::UserPoolDomain
     Condition: IsDev
-    Properties: 
-      Domain: !Join [ '-', !Split [ '.', 'auth.dev.${self:custom.rootDomain}'] ]
-      UserPoolId: !Ref CognitoUserPool
+    Properties:
+      Domain:
+        Fn::Join:
+          - '-'
+          - Fn::Split: [ '.', 'auth.dev.${self:custom.rootDomain}' ]
+      UserPoolId:

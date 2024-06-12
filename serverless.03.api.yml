@@ -1,11 +1,9 @@
 app: url-shortener
 service: ${self:app}-api
 
-frameworkVersion: '3'
+frameworkVersion: '4'
 useDotenv: true
 configValidationMode: error
-disabledDeprecations:
-  - LAMBDA_HASHING_VERSION_V2
 
 plugins:
   - serverless-domain-manager
@@ -13,10 +11,10 @@ plugins:
 provider:
   name: aws
   runtime: python3.11
-  region: ${opt:region, 'eu-west-1'}
+  region: eu-west-1
   stage: ${opt:stage, 'dev'}
   logs:
-    restApi: ${self:custom.logs.${self:provider.stage}}
+    restApi: ${param:restApiLogsEnabled}
   environment:
     MAINTAINER_EMAIL: "${env:MAINTAINER}"
     BUCKET_NAME: "${self:custom.bucketName}"
@@ -95,21 +93,22 @@ provider:
             - "arn:aws:dynamodb:*:*:table/${self:custom.tables.links}/index/User-index"
             - "arn:aws:dynamodb:*:*:table/${self:custom.tables.users}/index/Email-index"
 
+stages:
+  dev:
+    params:
+      corsOrigin: 'http://localhost:8080'
+      restApiLogsEnabled: false
+  v1:
+    params:
+      corsOrigin: 'https://${cf:${self:app}-dns.RootDomain}'
+      restApiLogsEnabled: true
+
 custom:
   stacks:
     dev: dev
     v1: pro
     v2: pro
   stack: ${self:custom.stacks.${self:provider.stage}}
-  cors:
-    origin:
-      dev: 'http://localhost:8080'
-      v1: 'https://${cf:${self:app}-dns.RootDomain}'
-      v2: '${self:custom.cors.origin.v1}'
-  corsOrigin: ${self:custom.cors.origin.${self:provider.stage}}
-  logs:
-    dev: false
-    v1: true
   bucketName: ${cf:${self:app}-resources-${self:custom.stack}.RedirectBucketName}
   tables:
     links: ${cf:${self:app}-resources-${self:custom.stack}.LinksTable}
@@ -254,7 +253,7 @@ functions:
           integration: lambda
           method: post
           cors:
-            origin: '${self:custom.corsOrigin}'
+            origin: '${param:corsOrigin}'
           request:
             schemas:
               application/json: create-link-model
@@ -282,7 +281,7 @@ functions:
           integration: lambda
           method: get
           cors:
-            origin: '${self:custom.corsOrigin}'
+            origin: '${param:corsOrigin}'
           request:
             template:
               application/x-www-form-urlencoded: null
@@ -326,7 +325,7 @@ functions:
           integration: lambda
           method: delete
           cors:
-            origin: '${self:custom.corsOrigin}'
+            origin: '${param:corsOrigin}'
           request:
             template:
               application/x-www-form-urlencoded: null
@@ -373,7 +372,7 @@ functions:
           integration: lambda
           method: delete
           cors:
-            origin: '${self:custom.corsOrigin}'
+            origin: '${param:corsOrigin}'
           request:
             template:
               application/x-www-form-urlencoded: null
@@ -396,7 +395,7 @@ functions:
           integration: lambda
           method: patch
           cors:
-            origin: '${self:custom.corsOrigin}'
+            origin: '${param:corsOrigin}'
           request:
             schemas:
               application/json: update-link-model
@@ -425,7 +424,7 @@ functions:
           integration: lambda
           method: patch
           cors:
-            origin: '${self:custom.corsOrigin}'
+            origin: '${param:corsOrigin}'
           request:
             schemas:
               application/json: update-link-model
