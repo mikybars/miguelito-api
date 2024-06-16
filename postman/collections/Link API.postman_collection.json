@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "77e03b2e-1131-44c2-98a1-dc50fa66db0b",
+		"_postman_id": "d0da7afb-ad18-4897-b26c-92a64e4e6966",
 		"name": "Link API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "9513392"
+		"_exporter_id": "30338584"
 	},
 	"item": [
 		{
@@ -237,6 +237,18 @@
 	"auth": {
 		"type": "oauth2",
 		"oauth2": [
+			{
+				"key": "refreshRequestParams",
+				"value": [
+					{
+						"key": "client_id",
+						"value": "{{cognitoClientId}}",
+						"enabled": true,
+						"send_as": "request_body"
+					}
+				],
+				"type": "any"
+			},
 			{
 				"key": "client_authentication",
 				"value": "body",

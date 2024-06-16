@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "18bf8477-3eb1-44c8-b219-629aaad377a6",
+		"_postman_id": "d15c9d5d-cb45-4ac3-95b0-e4864240cc46",
 		"name": "Admin API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "9513392"
+		"_exporter_id": "30338584"
 	},
 	"item": [
 		{
@@ -198,6 +198,18 @@
 	"auth": {
 		"type": "oauth2",
 		"oauth2": [
+			{
+				"key": "refreshRequestParams",
+				"value": [
+					{
+						"key": "client_id",
+						"value": "{{cognitoClientId}}",
+						"enabled": true,
+						"send_as": "request_body"
+					}
+				],
+				"type": "any"
+			},
 			{
 				"key": "client_authentication",
 				"value": "body",
