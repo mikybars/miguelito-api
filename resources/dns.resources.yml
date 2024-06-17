@@ -1,24 +1,35 @@
 Resources:
-  WebsiteDNSName:
-    Type: AWS::Route53::RecordSetGroup
+  RootDomainDNSRecord:
+    Type: AWS::Route53::RecordSet
     Condition: IsPro
     Properties:
+      AliasTarget:
+        # https://docs.aws.amazon.com/es_es/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html#cfn-route53-aliastarget-hostedzoneid
+        HostedZoneId: Z2FDTNDATAQYW2
+        DNSName:
+          Fn::GetAtt: [ CloudFrontDistribution, DomainName ]
+        EvaluateTargetHealth: false
       HostedZoneName: ${self:custom.rootDomain}.
-      RecordSets:
-        - Name: ${self:custom.rootDomain}
-          Type: A
-          AliasTarget:
-            # https://docs.aws.amazon.com/es_es/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html#cfn-route53-aliastarget-hostedzoneid
-            HostedZoneId: Z2FDTNDATAQYW2
-            DNSName:
-              Fn::GetAtt: [ CloudFrontDistribution, DomainName ]
-            EvaluateTargetHealth: false
+      Name: ${self:custom.rootDomain}
+      Type: A
+  AuthDomainDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: IsPro
+    Properties:
+      AliasTarget:
+        HostedZoneId: Z2FDTNDATAQYW2
+        DNSName:
+          Fn::GetAtt: [ CognitoUserPoolDomain, CloudFrontDistribution ]
+        EvaluateTargetHealth: false
+      HostedZoneName: ${self:custom.rootDomain}.
+      Name: auth.${self:custom.rootDomain}
+      Type: A
   CognitoUserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Condition: IsPro
     DependsOn: RootDomainDNSRecord
-    Properties:
-      CustomDomainConfig:
+    Properties: 
+      CustomDomainConfig: 
         CertificateArn: ${self:custom.certificateArn}
       Domain: auth.${self:custom.rootDomain}
       UserPoolId:
@@ -32,3 +43,4 @@ Resources:
           - '-'
           - Fn::Split: [ '.', 'auth.dev.${self:custom.rootDomain}' ]
       UserPoolId:
+        Ref: CognitoUserPool

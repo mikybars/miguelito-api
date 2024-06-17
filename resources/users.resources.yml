@@ -36,7 +36,7 @@ Resources:
         email: email
         given_name: given_name
       ProviderDetails:
-        client_id: ${env:GOOGLE_APP_ID}.apps.googleusercontent.com
+        client_id: ${env:GOOGLE_APP_ID}
         client_secret: ${env:GOOGLE_APP_SECRET}
         authorize_scopes: email openid profile
       ProviderType: Google
