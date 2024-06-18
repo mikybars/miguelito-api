@@ -2,6 +2,6 @@
   "name": "miguelito-api",
   "version": "1.0.0",
   "devDependencies": {
-    "serverless-domain-manager": "^5.1.0"
+    "serverless-domain-manager": "^7.3.8"
   }
 }

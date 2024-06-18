@@ -2,7 +2,7 @@ Resources:
   LinksTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: Links-${self:provider.stage}
+      TableName: Links-${sls:stage}
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
@@ -24,10 +24,11 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: 1
             WriteCapacityUnits: 1
+
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: Users-${self:provider.stage}
+      TableName: Users-${sls:stage}
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
@@ -49,10 +50,11 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: 1
             WriteCapacityUnits: 1
+
   UniquesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: Uniques-${self:provider.stage}
+      TableName: Uniques-${sls:stage}
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
@@ -66,10 +68,11 @@ Resources:
           KeyType: HASH
         - AttributeName: type
           KeyType: RANGE
+
   CountersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: Counters-${self:provider.stage}
+      TableName: Counters-${sls:stage}
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1

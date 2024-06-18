@@ -1,7 +1,6 @@
-app: url-shortener
-service: ${self:app}-api
+service: url-shortener
 
-frameworkVersion: '4'
+frameworkVersion: "4"
 useDotenv: true
 configValidationMode: error
 
@@ -12,16 +11,16 @@ provider:
   name: aws
   runtime: python3.11
   region: eu-west-1
-  stage: ${opt:stage, 'dev'}
+  stage: dev
   logs:
     restApi: ${param:restApiLogsEnabled}
   environment:
     MAINTAINER_EMAIL: "${env:MAINTAINER}"
-    BUCKET_NAME: "${self:custom.bucketName}"
-    LINKS_TABLE: "${self:custom.tables.links}"
-    USERS_TABLE: "${self:custom.tables.users}"
-    UNIQUES_TABLE: "${self:custom.tables.uniques}"
-    COUNTERS_TABLE: "${self:custom.tables.counters}"
+    BUCKET_NAME: !Ref RedirectBucket
+    LINKS_TABLE: !Ref LinksTable
+    USERS_TABLE: !Ref UsersTable
+    UNIQUES_TABLE: !Ref UniquesTable
+    COUNTERS_TABLE: !Ref CountersTable
   apiGateway:
     shouldStartNameWithService: true
     request:
@@ -40,85 +39,103 @@ provider:
       statements:
         - Effect: "Allow"
           Action:
-            - "ses:SendEmail"
+            - ses:SendEmail
           Resource: "arn:aws:ses:*:*:identity/${env:MAINTAINER}"
         - Effect: "Allow"
           Action:
-            - "s3:GetObject"
-            - "s3:PutObject"
-            - "s3:PutObjectAcl"
-            - "s3:DeleteObject"
-          Resource: "arn:aws:s3:::${self:custom.bucketName}/*"
+            - s3:ListBucket
+          Resource: !GetAtt RedirectBucket.Arn
         - Effect: "Allow"
           Action:
-            - "dynamodb:UpdateItem"
-          Resource:
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.counters}"
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.users}"
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.links}"
+            - s3:GetObject
+            - s3:PutObject
+            - s3:PutObjectAcl
+            - s3:DeleteObject
+          Resource: !Sub "${RedirectBucket.Arn}/*"
         - Effect: "Allow"
           Action:
-            - "dynamodb:PutItem"
+            - dynamodb:UpdateItem
           Resource:
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.links}"
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.users}"
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.uniques}"
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.counters}"
+            - !GetAtt CountersTable.Arn
+            - !GetAtt LinksTable.Arn
+            - !GetAtt UsersTable.Arn
         - Effect: "Allow"
           Action:
-            - "dynamodb:DeleteItem"
+            - dynamodb:PutItem
           Resource:
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.links}"
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.users}"
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.uniques}"
+            - !GetAtt CountersTable.Arn
+            - !GetAtt LinksTable.Arn
+            - !GetAtt UniquesTable.Arn
+            - !GetAtt UsersTable.Arn
         - Effect: "Allow"
           Action:
-            - "dynamodb:Scan"
-            - "dynamodb:GetItem"
+            - dynamodb:DeleteItem
           Resource:
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.links}"
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.users}"
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.uniques}"
+            - !GetAtt LinksTable.Arn
+            - !GetAtt UniquesTable.Arn
+            - !GetAtt UsersTable.Arn
         - Effect: "Allow"
           Action:
-            - "dynamodb:Query"
-            - "dynamodb:BatchWriteItem"
+            - dynamodb:Scan
+            - dynamodb:GetItem
           Resource:
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.links}"
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.uniques}"
+            - !GetAtt LinksTable.Arn
+            - !GetAtt UniquesTable.Arn
+            - !GetAtt UsersTable.Arn
         - Effect: "Allow"
           Action:
-            - "dynamodb:Query"
+            - dynamodb:Query
+            - dynamodb:BatchWriteItem
           Resource:
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.links}/index/User-index"
-            - "arn:aws:dynamodb:*:*:table/${self:custom.tables.users}/index/Email-index"
+            - !GetAtt LinksTable.Arn
+            - !GetAtt UniquesTable.Arn
+        - Effect: "Allow"
+          Action:
+            - dynamodb:Query
+          Resource:
+            - !Sub "${LinksTable.Arn}/index/User-index"
+            - !Sub "${UsersTable.Arn}/index/Email-index"
+
+resources:
+  - Conditions:
+      IsPro: !Equals ["${sls:stage}", pro]
+      IsDev: !Not [Condition: IsPro]
+
+  - ${file(resources/db.cf.yml)}
+  - ${file(resources/users.cf.yml)}
+  - ${file(resources/web.cf.yml)}
 
 stages:
+  default:
+    params:
+      userPoolName: ${self:custom.rootDomain}-users-${sls:stage}
   dev:
     params:
-      corsOrigin: 'http://localhost:8080'
+      apiPath: dev
+      corsOrigin: "http://localhost:8080"
       restApiLogsEnabled: false
-  v1:
+      accessTokenValidityInMins: 60
+      idTokenValidityInMins: 60
+      refreshTokenValidityInMins: 600
+      redirectBucketName: dev.${self:custom.rootDomain}
+  pro:
     params:
-      corsOrigin: 'https://${cf:${self:app}-dns.RootDomain}'
+      apiPath: v1
+      corsOrigin: ${self:custom.rootDomain}
       restApiLogsEnabled: true
+      accessTokenValidityInMins: 5
+      idTokenValidityInMins: 5
+      refreshTokenValidityInMins: 60
+      redirectBucketName: ${self:custom.rootDomain}
 
 custom:
-  stacks:
-    dev: dev
-    v1: pro
-    v2: pro
-  stack: ${self:custom.stacks.${self:provider.stage}}
-  bucketName: ${cf:${self:app}-resources-${self:custom.stack}.RedirectBucketName}
-  tables:
-    links: ${cf:${self:app}-resources-${self:custom.stack}.LinksTable}
-    users: ${cf:${self:app}-resources-${self:custom.stack}.UsersTable}
-    uniques: ${cf:${self:app}-resources-${self:custom.stack}.UniquesTable}
-    counters: ${cf:${self:app}-resources-${self:custom.stack}.CountersTable}
+  rootDomain: ${env:DOMAIN_NAME}
+  certificateArn: ${env:CERTIFICATE_ARN}
   customDomain:
-    domainName: api.${cf:${self:app}-dns.RootDomain}
+    autoDomain: true
+    domainName: api.${env:DOMAIN_NAME}
     certificateArn: ${env:CERTIFICATE_ARN}
-    basePath: ${self:provider.stage}
+    basePath: ${param:apiPath}
     createRoute53Record: true
   authMapping: |-
     "auth": {
@@ -127,7 +144,7 @@ custom:
 
 package:
   patterns:
-    - '!**/*'
+    - "!**/*"
     - src/user/*.py
     - src/link/*.py
     - src/admin/*.py
@@ -139,7 +156,7 @@ functions:
     description: Denies access to non activated user accounts while sending request-to-join emails the first time
     events:
       - cognitoUserPool:
-          pool: ${cf:${self:app}-dns.RootDomain}-users-${self:custom.stack}
+          pool: ${param:userPoolName}
           trigger: PreSignUp
           existing: true
   updateUser:
@@ -165,26 +182,29 @@ functions:
           response:
             statusCodes:
               200: &okResponse
-                pattern: ''
+                pattern: ""
               400: &userError
-                pattern: '(ValidationError|ApplicationError): .*'
+                pattern: "(ValidationError|ApplicationError): .*"
                 template: |
                   #set ($msg = $input.path("$.errorMessage"))
                   #set ($index = $msg.indexOf(':') + 2)
                   { "message": "$msg.substring($index)" }
               403: &authError
                 <<: *userError
-                pattern: 'AuthorizationError: .*'
+                pattern: "AuthorizationError: .*"
               404: &notFoundError
                 <<: *userError
-                pattern: 'NotFoundError: .*'
+                pattern: "NotFoundError: .*"
               500: &unexpectedError
                 pattern: '.*\berror\b.*'
                 template: '{ "message": "something went wrong" }'
           authorizer: &auth
             name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
-            arn: "${cf:${self:app}-resources-${self:custom.stack}.UserPoolArn}"
+            arn:
+              Fn::GetAtt:
+                - CognitoUserPool
+                - Arn
   listUsers:
     handler: src/user/api.list_users
     description: Lists all the users (admin only)
@@ -243,7 +263,7 @@ functions:
           response:
             statusCodes:
               200:
-                pattern: ''
+                pattern: ""
   createLink:
     handler: src/link/api.create_link
     description: Creates a new link pointing to the URL provided
@@ -253,7 +273,7 @@ functions:
           integration: lambda
           method: post
           cors:
-            origin: '${param:corsOrigin}'
+            origin: "${param:corsOrigin}"
           request:
             schemas:
               application/json: create-link-model
@@ -281,7 +301,7 @@ functions:
           integration: lambda
           method: get
           cors:
-            origin: '${param:corsOrigin}'
+            origin: "${param:corsOrigin}"
           request:
             template:
               application/x-www-form-urlencoded: null
@@ -325,7 +345,7 @@ functions:
           integration: lambda
           method: delete
           cors:
-            origin: '${param:corsOrigin}'
+            origin: "${param:corsOrigin}"
           request:
             template:
               application/x-www-form-urlencoded: null
@@ -372,7 +392,7 @@ functions:
           integration: lambda
           method: delete
           cors:
-            origin: '${param:corsOrigin}'
+            origin: "${param:corsOrigin}"
           request:
             template:
               application/x-www-form-urlencoded: null
@@ -395,7 +415,7 @@ functions:
           integration: lambda
           method: patch
           cors:
-            origin: '${param:corsOrigin}'
+            origin: "${param:corsOrigin}"
           request:
             schemas:
               application/json: update-link-model
@@ -424,7 +444,7 @@ functions:
           integration: lambda
           method: patch
           cors:
-            origin: '${param:corsOrigin}'
+            origin: "${param:corsOrigin}"
           request:
             schemas:
               application/json: update-link-model

@@ -21,18 +21,6 @@ lint-src:
 sort-imports:
 	isort . --profile black
 
-# Validate serverless.yml files
-lint-sls:
-	#!/usr/bin/env bash
-	for stack in dns resources api; do
-		just lint-config $stack dev
-		just lint-config $stack `[[ $stack != api ]] && echo pro || echo v1`
-	done
-
-[private]
-lint-config stack stage:
-	sls package --config serverless*{{stack}}.yml --stage {{stage}}
-
 # npm install -g newman newman-reporter-htmlextra
 # Run integration tests via Postman (needs newman)
 test:
@@ -43,25 +31,15 @@ test:
 		--env-var awsAccessKeyId=${AWS_ACCESS_KEY_ID} \
 		--env-var awsSecretAccessKey=${AWS_SECRET_ACCESS_KEY}
 
-# Run integration tests via Postman (needs gh)
 setup-ci:
-  gh secret set -f .env
+    gh secret set -f .env
 
-deploy stack stage:
-	#!/usr/bin/env bash
-	sls deploy --verbose --config serverless*.{{stack}}.yml --stage {{stage}}
-	if [[ {{stack}} == dns ]]; then
-		sls create_domain --config serverless*.dns.yml
-	fi
+deploy stage='dev' region='eu-west-1':
+    sls deploy --verbose --stage {{stage}} --region {{region}}
 
-# Remove hosted zone and API custom domain name from AWS
-undeploy stack stage:
-	#!/usr/bin/env bash
-	if [[ {{stack}} == dns ]]; then
-		sls delete_domain --config serverless*.dns.yml
-	fi
-	sls remove --config serverless*.{{stack}}.yml --stage {{stage}}
+undeploy stage='dev' region='eu-west-1':
+	sls remove --verbose --stage {{stage}} --region {{region}}
 
 # Print logs of the specified function
-logs fn stage:
-	sls logs --config serverless*.api.yml --function {{fn}} --stage {{stage}}
+logs fn stage='dev' region='eu-west-1':
+	sls logs --function {{fn}} --stage {{stage}} --region {{region}}
