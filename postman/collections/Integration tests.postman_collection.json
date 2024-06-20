@@ -27,7 +27,8 @@
 											"const userNo = pm.variables.get(\"userNo\")",
 											"test.use(pm).user(userNo).setAsCurrent()"
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								},
 								{
@@ -40,13 +41,14 @@
 											"",
 											"if (pm.response.code === 400) {",
 											"    pm.test(`User ${pm.variables.get(\"testEmail\")} already exists`, function() {",
-											"        postman.setNextRequest(null)",
+											"        pm.execution.setNextRequest(null)",
 											"        pm.expect(pm.response.json()).to.have.property('__type', 'UsernameExistsException');",
-											"        postman.setNextRequest()",
+											"        pm.execution.setNextRequest()",
 											"    });",
 											"}"
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								}
 							],
@@ -55,13 +57,11 @@
 								"header": [
 									{
 										"key": "X-Amz-Target",
-										"value": "AWSCognitoIdentityProviderService.AdminCreateUser",
-										"type": "text"
+										"value": "AWSCognitoIdentityProviderService.AdminCreateUser"
 									},
 									{
 										"key": "Content-Type",
-										"value": "application/x-amz-json-1.1",
-										"type": "text"
+										"value": "application/x-amz-json-1.1"
 									}
 								],
 								"body": {
@@ -101,30 +101,31 @@
 											"const user = test.use(pm).user(userNo)",
 											"",
 											"pm.test(`Status code is 200`, function() {",
-											"    postman.setNextRequest(null)",
+											"    pm.execution.setNextRequest(null)",
 											"    pm.response.to.have.status(200);",
-											"    postman.setNextRequest()",
+											"    pm.execution.setNextRequest()",
 											"});",
 											"",
 											"if (jsonData.ChallengeName) {",
 											"    pm.test(\"Auth challenge response required\", function() {",
-											"        postman.setNextRequest(null)",
+											"        pm.execution.setNextRequest(null)",
 											"        pm.expect(jsonData).to.have.property(\"ChallengeName\", \"NEW_PASSWORD_REQUIRED\")",
 											"        pm.expect(jsonData).to.have.property(\"Session\")",
 											"        pm.variables.set(\"awsAuthSession\", jsonData.Session)",
-											"        postman.setNextRequest()",
+											"        pm.execution.setNextRequest()",
 											"    })",
 											"} else {",
 											"    pm.test(`User ${user.email} logged in`, function() {",
-											"        postman.setNextRequest(null)",
+											"        pm.execution.setNextRequest(null)",
 											"        pm.expect(jsonData).to.deep.nested.property('AuthenticationResult.IdToken')",
 											"        user.setIdToken(jsonData.AuthenticationResult.IdToken)",
-											"        postman.setNextRequest()",
+											"        pm.execution.setNextRequest()",
 											"    })",
 											"}",
 											""
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								},
 								{
@@ -133,7 +134,8 @@
 										"exec": [
 											""
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								}
 							],
@@ -142,13 +144,11 @@
 								"header": [
 									{
 										"key": "X-Amz-Target",
-										"value": "AWSCognitoIdentityProviderService.InitiateAuth",
-										"type": "text"
+										"value": "AWSCognitoIdentityProviderService.InitiateAuth"
 									},
 									{
 										"key": "Content-Type",
-										"value": "application/x-amz-json-1.1",
-										"type": "text"
+										"value": "application/x-amz-json-1.1"
 									}
 								],
 								"body": {
@@ -187,7 +187,8 @@
 											"    test.use(pm).skipCurrentRequest()",
 											"}"
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								},
 								{
@@ -200,17 +201,17 @@
 											"const authChallengeWasRequired = pm.variables.has(\"awsAuthSession\")",
 											"",
 											"test.runIf(authChallengeWasRequired, `User ${user.email} logged in`, function() {",
-											"    postman.setNextRequest(null)",
+											"    pm.execution.setNextRequest(null)",
 											"    pm.response.to.have.status(200);",
 											"    pm.expect(jsonData).to.deep.nested.property('AuthenticationResult.IdToken')",
 											"    user.setIdToken(jsonData.AuthenticationResult.IdToken)",
-											"    postman.setNextRequest()",
+											"    pm.execution.setNextRequest()",
 											"});",
 											"",
 											"if (test.user(userNo + 1) !== undefined) {",
 											"   pm.variables.set(\"userNo\", userNo + 1)",
 											"   pm.variables.unset(\"awsAuthSession\")",
-											"   postman.setNextRequest(\"Create user\")",
+											"   pm.execution.setNextRequest(\"Create user\")",
 											"} else {",
 											"    pm.variables.unset(\"userNo\")",
 											"    console.log(\"** AWS AUTH END **\")",
@@ -218,7 +219,8 @@
 											"",
 											""
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								}
 							],
@@ -227,13 +229,11 @@
 								"header": [
 									{
 										"key": "X-Amz-Target",
-										"value": "AWSCognitoIdentityProviderService.RespondToAuthChallenge",
-										"type": "text"
+										"value": "AWSCognitoIdentityProviderService.RespondToAuthChallenge"
 									},
 									{
 										"key": "Content-Type",
-										"value": "application/x-amz-json-1.1",
-										"type": "text"
+										"value": "application/x-amz-json-1.1"
 									}
 								],
 								"body": {
@@ -321,7 +321,8 @@
 											"console.log(\"Deleting all the links\")",
 											"test.use(pm).user(0).setAsCurrent()"
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								},
 								{
@@ -329,13 +330,14 @@
 									"script": {
 										"exec": [
 											"pm.test(\"Response status is OK\", function () {",
-											"    postman.setNextRequest(null);",
+											"    pm.execution.setNextRequest(null);",
 											"    pm.expect(pm.response.code).to.be.oneOf([200, 204])",
-											"    postman.setNextRequest()",
+											"    pm.execution.setNextRequest()",
 											"});",
 											""
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								}
 							],
@@ -344,8 +346,7 @@
 								"header": [
 									{
 										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
+										"value": "application/json"
 									}
 								],
 								"url": {
@@ -443,7 +444,8 @@
 										"exec": [
 											""
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								},
 								{
@@ -462,12 +464,13 @@
 											"});",
 											"",
 											"pm.test(\"Response matches request\", function () {",
-											"    const jsonRequest = JSON.parse(request.data);",
+											"    const jsonRequest = JSON.parse(pm.request.body.raw);",
 											"    pm.expect(jsonResponse).to.have.property('origin', jsonRequest.origin);",
 											"    pm.expect(jsonResponse).to.have.property('backhalf', jsonRequest.backhalf);",
 											"});"
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								}
 							],
@@ -1024,7 +1027,8 @@
 											"const linkToUpdate = pm.request.url.variables.get('backhalf');",
 											"test.use(pm).currentUser().createLink('https://www.google.com', linkToUpdate)"
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								},
 								{
@@ -1043,7 +1047,7 @@
 											"});",
 											"",
 											"pm.test(\"Requested attributes are updated\", function () {",
-											"    const jsonRequest = JSON.parse(request.data);",
+											"    const jsonRequest = JSON.parse(pm.request.body.raw);",
 											"    pm.expect(jsonResponse).to.have.property('backhalf', jsonRequest.backhalf);",
 											"});",
 											"",
@@ -1052,7 +1056,8 @@
 											"});",
 											""
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								}
 							],
@@ -1061,8 +1066,7 @@
 								"header": [
 									{
 										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
+										"value": "application/json"
 									}
 								],
 								"body": {
@@ -1098,7 +1102,8 @@
 											"const linkToUpdate = pm.request.url.variables.get('backhalf');",
 											"test.use(pm).currentUser().createLink('https://www.google.com', linkToUpdate)"
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								},
 								{
@@ -1117,7 +1122,7 @@
 											"});",
 											"",
 											"pm.test(\"Requested attributes are updated\", function () {",
-											"    const jsonRequest = JSON.parse(request.data);",
+											"    const jsonRequest = JSON.parse(pm.request.body.raw);",
 											"    pm.expect(jsonResponse).to.have.property('origin', jsonRequest.origin);",
 											"});",
 											"",
@@ -1125,7 +1130,8 @@
 											"    pm.expect(jsonResponse).to.have.property('user', test.currentUser().email);",
 											"});"
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								}
 							],
@@ -1134,8 +1140,7 @@
 								"header": [
 									{
 										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
+										"value": "application/json"
 									}
 								],
 								"body": {
@@ -1440,12 +1445,13 @@
 									"script": {
 										"exec": [
 											"const linkToUpdate = pm.request.url.variables.get('backhalf');",
-											"const linkFromOtherUser = JSON.parse(request.data).backhalf;",
+											"const linkFromOtherUser = JSON.parse(pm.request.body.raw).backhalf;",
 											"test.use(pm)",
 											"test.currentUser().createLink('https://www.google.com', linkToUpdate)",
 											"test.otherUser().createLink('https://www.google.com', linkFromOtherUser)"
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								},
 								{
@@ -1468,7 +1474,8 @@
 											"});",
 											""
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								}
 							],
@@ -1477,8 +1484,7 @@
 								"header": [
 									{
 										"key": "Content-Type",
-										"value": "application/json",
-										"type": "text"
+										"value": "application/json"
 									}
 								],
 								"body": {
@@ -1778,7 +1784,8 @@
 											"const userNo = pm.variables.get(\"userNo\")",
 											"test.use(pm).user(userNo).setAsCurrent()"
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								},
 								{
@@ -1792,12 +1799,13 @@
 											"const userNo = pm.variables.get(\"userNo\")",
 											"if (test.use(pm).user(userNo + 1) !== undefined) {",
 											"   pm.variables.set(\"userNo\", userNo + 1)",
-											"   postman.setNextRequest(\"Delete user\")",
+											"   pm.execution.setNextRequest(\"Delete user\")",
 											"} else {",
 											"    console.log(\"** AWS AUTH END **\")",
 											"}"
 										],
-										"type": "text/javascript"
+										"type": "text/javascript",
+										"packages": {}
 									}
 								}
 							],
@@ -1806,13 +1814,11 @@
 								"header": [
 									{
 										"key": "X-Amz-Target",
-										"value": "AWSCognitoIdentityProviderService.AdminDeleteUser",
-										"type": "text"
+										"value": "AWSCognitoIdentityProviderService.AdminDeleteUser"
 									},
 									{
 										"key": "Content-Type",
-										"value": "application/x-amz-json-1.1",
-										"type": "text"
+										"value": "application/x-amz-json-1.1"
 									}
 								],
 								"body": {
@@ -2041,16 +2047,16 @@
 					"        }",
 					"    },",
 					"    before() {",
-					"        console.log(`** before ** ${request.name}`)",
+					"        console.log(`** before ** ${pm.info.requestName}`)",
 					"    },",
 					"    after() {",
-					"        console.log(`** after ** ${request.name}`)",
+					"        console.log(`** after ** ${pm.info.requestName}`)",
 					"    },",
 					"    runIf(condition, testName, testFn) {",
 					"        (condition ? pm.test : pm.test.skip)(testName, testFn)",
 					"    },",
 					"    skipCurrentRequest() {",
-					"        console.log(`Skipped '${request.name}'`)",
+					"        console.log(`Skipped '${pm.info.requestName}'`)",
 					"        pm.request.url = \"postman-echo.com/get\"",
 					"        pm.request.method = \"get\"",
 					"    },",
